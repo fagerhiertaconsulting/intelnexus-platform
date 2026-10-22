@@ -33,10 +33,10 @@ export default function TimelineView({ caseId }: TimelineViewProps) {
           api.listRelationships(caseId),
         ]);
 
-        const entMap = new Map(entities.map((e) => [e.id, e.name]));
+        const entMap = new Map(entities.map((e: Entity) => [e.id, e.name]));
         const evList: TimelineEvent[] = [];
 
-        entities.forEach((e) => {
+        entities.forEach((e: Entity) => {
           evList.push({
             id: e.id,
             timestamp: e.created_at,
@@ -48,7 +48,7 @@ export default function TimelineView({ caseId }: TimelineViewProps) {
           });
         });
 
-        relationships.forEach((r) => {
+        relationships.forEach((r: Relationship) => {
           const srcName = entMap.get(r.source_id) || r.source_id;
           const tgtName = entMap.get(r.target_id) || r.target_id;
           evList.push({

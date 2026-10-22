@@ -33,7 +33,7 @@ export default function MapView({ caseId }: MapViewProps) {
         const entities = await api.listEntities(caseId);
 
         const foundPoints: GeoPoint[] = [];
-        entities.forEach((e) => {
+        entities.forEach((e: Entity) => {
           const lat = parseFloat(e.attributes?.latitude);
           const lng = parseFloat(e.attributes?.longitude);
           if (!isNaN(lat) && !isNaN(lng)) {

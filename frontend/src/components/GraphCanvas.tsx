@@ -251,7 +251,7 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
       const node = evt.target;
       setSelectedNode(node.data());
       // Hämta kompatibla transforms för denna nod
-      api.getTransformsForEntity(node.data().id).then((res) => {
+      api.getTransformsForEntity(node.data().id).then((res: any) => {
         setAvailableTransforms(res.available_transforms || []);
       });
     });
