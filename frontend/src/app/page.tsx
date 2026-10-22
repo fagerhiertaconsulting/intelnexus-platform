@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { Case, WorkspaceRole } from "@/types";
 import { api } from "@/lib/api";
 import GraphCanvas from "@/components/GraphCanvas";
@@ -137,18 +136,10 @@ export default function Home() {
       <header className="h-[68px] bg-[#0c121e] border-b border-slate-800/80 px-5 flex items-center justify-between shrink-0 z-30 shadow-md">
         {/* Vänster: Logotyp, Rollväljare & Ärendeväljare */}
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Image
-              src="/logo.svg"
-              alt="IntelNexus Platform"
-              width={160}
-              height={32}
-              priority
-              className="h-8 w-auto shrink-0"
-            />
-            <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-              v3.0
-            </span>
+          {/* Säkerställ att logotypen och titeln inte trycks ihop */}
+          <div className="flex items-center gap-3 shrink-0">
+            <img src="/logo.svg" alt="IntelNexus Platform" className="h-8 w-auto" />
+            <span className="font-semibold text-lg whitespace-nowrap">IntelNexus <span className="text-blue-400">Platform</span></span>
           </div>
 
           <div className="h-6 w-[1px] bg-slate-800 mx-1" />
