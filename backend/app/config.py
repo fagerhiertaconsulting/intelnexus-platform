@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # Datainsamlingsläge: MOCK_OSINT=false som standard i drift
     MOCK_OSINT: bool = False
 
+    @property
+    def mock_osint(self) -> bool:
+        return self.MOCK_OSINT
+
     model_config = {
         "env_file": ".env",
         "extra": "ignore",
