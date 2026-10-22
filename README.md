@@ -1,152 +1,103 @@
-# OpenIntel-OSINT
+# OpenIntel-OSINT (v2.0)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Python: 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![Graph: NetworkX / Neo4j](https://img.shields.io/badge/Graph-NetworkX%20%7C%20Neo4j-orange.svg)]()
+[![BYOAK: AES-256-GCM](https://img.shields.io/badge/Vault-AES--256--GCM-green.svg)]()
 
-En modern, öppen källkodsbaserad plattform för informationsinsamling, länk- och grafanalys, beviskedjehantering och rapportgenerering av öppen underrättelsedata (OSINT).
+En modulär, öppen källkodsbaserad plattform för insamling, länk- och grafanalys, beviskedjehantering och rapportgenerering av öppen underrättelsedata (OSINT) med stöd för **rollbaserade arbetsytor (Personas)** och adaptiva dashboards.
 
-Systemet fungerar som en enhetlig utredningsmiljö för både enskilda granskningar (bakgrundskontroller, digitala fotspår, infrastruktur) och komplexa utredningar (hotaktörer, bolagsstrukturer och ekonomisk brottslighet).
+Systemet stödjer allt från snabba, guidade bakgrundskontroller för privatpersoner till forensiska utredningar för rättsväsende, finansiell underrättelseverksamhet (AML/UBO), undersökande journalistik och geopolitisk analys.
 
 ---
 
-## 🏛️ Systemarkitektur
+## 🏛️ Rollbaserad Arkitektur (Adaptive Personas)
+
+Systemet anpassar gränssnittet, vilka moduler som laddas och vilka sökguider (Playbooks) som föreslås baserat på vald roll:
 
 ```
-+--------------------------------------------------------------------------+
-|                       ANVÄNDARGRÄNSSNITT (Next.js)                       |
-|   • Interaktiv grafduk (Cytoscape.js) med nodexpansion & layoutmotor    |
-|   • Tidslinjevy (kronologiska händelser och relationer)                  |
-|   • Kartvy (geografisk visualisering med Leaflet & OpenStreetMap)        |
-|   • Beviskedjelogg med realtids SHA-256 verifiering                      |
-|   • Rapporteditor & automatiserad PDF/Markdown export                    |
-+--------------------------------------------------------------------------+
-                                    │  REST / WebSocket
-                                    ▼
-+--------------------------------------------------------------------------+
-|                      API GATEWAY (FastAPI / Python)                      |
-|   • Ärendehantering (/api/cases), Entiteter & Länkar (/api/entities)     |
-|   • Transform Engine (/api/transforms), Grafalgoritmer (/api/graph)      |
-|   • Beviskedja (/api/evidence), AI/NLP & Textanalys (/api/analysis)      |
-+--------------------------------------------------------------------------+
+                    +--------------------------------+
+                    |    ANVÄNDARE VÄLJER PROFIL     |
+                    +--------------------------------+
                                     │
-       ┌────────────────────────────┼────────────────────────────┐
-       ▼                            ▼                            ▼
-+──────────────+           +──────────────────+          +---------------+
-|  INGESTION   |           |  GRAPH & ENTITY  |          |   ANALYSIS &  |
-|    ENGINE    |           |    RESOLUTION    |          |   ENRICHMENT  |
-| (Transforms) |           |  (Länkanalys)    |          |  (LLM & NLP)  |
-+──────────────+           +──────────────────+          +---------------+
-       │                            │                            │
-       └────────────────────────────┼────────────────────────────┘
-                                    ▼
-+--------------------------------------------------------------------------+
-|                          PERSISTENSLAGER                                 |
-|   • Zero-Setup Lokal Drift: SQLite/JSON Metadata + Persistent Graph      |
-|   • Enterprise Drift: PostgreSQL + Neo4j + Redis + MinIO S3              |
-+--------------------------------------------------------------------------+
+    ┌──────────────┬────────────────┼────────────────┬──────────────┐
+    ▼              ▼                ▼                ▼              ▼
+[Privatperson] [Rättsväsende] [Journalistik]   [Finans / AML] [Geopolitik / Ambassad]
+    │              │                │                │              │
+    ▼              ▼                ▼                ▼              ▼
+Enkel guide    Forensisk vy    Källskydd        UBO & Nätverk  Satellit & Kartor
+Catfish-koll   Kedja av bevis  Metadata-tvätt   Sanktionslistor Transpondrar (ADS-B)
+Förenklad vy   Domstolsdata    Dokumentläckor   Kryptospårning Krisflöden & Media
 ```
 
----
-
-## ✨ Kärnfunktioner
-
-### 1. Ingestion Engine & Modulära Transforms
-* **Startpunkter (Seeds):** Domän, IP-adress, person, organisation, e-post, telefon, användarnamn, kryptoplånbok, plats och dokument.
-* **Färdiga kärntransforms:**
-  1. `DNS & WHOIS/RDAP`: Slår upp A, AAAA, MX, TXT, NS-poster och registrar via RDAP.
-  2. `Company Registry`: Extraherar bolagsstruktur, VD, styrelseledamöter, ägare och registrerad adress.
-  3. `Social Footprint Checker`: Asynkron kontroll över 20+ plattformar (GitHub, Reddit, GitLab, Keybase, Steam, etc.).
-  4. `IP & GeoIP`: Omvänd DNS (PTR), ASN, ISP och exakta GPS-koordinater.
-  5. `Certificate Transparency (CT)`: Automatisk upptäckt av subdomäner via crt.sh.
-  6. `Sanctions Screening`: Matchning mot internationella sanktionslistor (OFAC, EU, FN).
-  7. `EXIF & Media Extractor`: Extraherar bildmetadata, kameramodell, datum och GPS-taggar.
-
-### 2. Graf- och länkanalys
-* **Grafmotor:** Nativ NetworkX-grafmotor med noder och riktade kanter (`OWNS`, `DIRECTOR_OF`, `RESOLVES_TO`, `SUBDOMAIN_OF`, `LOCATED_AT`, etc.).
-* **Nätverksalgoritmer:** Beräknar PageRank, Betweenness centrality och Degree centrality för att automatiskt identifiera nyckelaktörer och central infrastruktur.
-* **Vägsökning:** Identifierar kortaste vägen (Shortest Path) mellan två godtyckliga noder.
-* **Export:** Exportera nätverksgrafen till **GEXF** (för Gephi), **GraphML**, **CSV** och **JSON**.
-
-### 3. Entitetsupplösning (Deduplicering)
-* **Deterministisk:** Automatisk sammanslagning vid identiska unika nycklar (organisationsnummer, momsregistreringsnummer, kryptoplånbok, etc.).
-* **Probabilistisk:** Viktning baserad på Jaro-Winkler likhetsavstånd för namn och alias med konfidenspoäng ($0.0 - 1.0$).
-
-### 4. Beviskedja (Chain of Custody)
-* **Kryptografisk bevisföring:** Alla hämtade sidor och API-svar hashas omedelbart med SHA-256 och lagras i oföränderlig lagring.
-* **Web Snapshotting:** Inbyggd motor för att frysa webbsidor och rådata med HTTP-huvuden och tidsstämplar.
-* **Integritetsrevision:** Kör fullständig revision med ett klick för att matematiskt bekräfta att inga bevisfiler har manipulerats.
-
-### 5. AI- & NLP-textanalys och Rapportgenerering
-* **Named Entity Recognition (NER):** Klistra in artiklar eller domstolsprotokoll för att automatiskt extrahera personer, företag, IP-adresser, domäner och krypto-adresser.
-* **Automatiserade Rapporter:** Genererar utredningsrapporter i Markdown och utskriftsklar PDF/HTML.
+### Stödda Roller och Arbetsytor
+1. **Privatperson (`dating_safety`):** Säkerhetskoll vid dejting eller köp/sälj. Wizard-layout med omvänd bildsökning (catfish-detektering), VoIP/burner-nummerkontroll, romansbedrägerispärr och klartextbedömning.
+2. **Rättsväsende & Polis (`law_enforcement`):** Forensisk arbetsyta med obruten beviskedja (SHA-256/512), telekom-/IP-korrelation och export strukturerad för förundersökningsprotokoll (FUP).
+3. **Undersökande Journalistik (`journalism`):** Dokumentvalv med Metadata Stripper (radering av EXIF/GPS/enhetsdata för att skydda visselblåsare), OCR/NER-extrahering och diarier.
+4. **Privatdetektiv & Konsult (`private_investigator`):** 360-graders dossier-vy med person-/bolagskorsreferenser, fordon, adresser och social footprint över 300+ forum.
+5. **Finansanalytiker & Compliance (`finance_aml`):** Anti-Money Laundering (AML), rekursiv upplösning av verklig huvudman (UBO), offshore-kartläggning och blockkedjetransaktioner.
+6. **Geopolitisk Analytiker (`geopolitical`):** Kartcentrerad situationsmedvetenhet med NASA FIRMS termiska satellitbränder och ADS-B flygtranspondrar.
+7. **Diplomatisk Beskickning (`embassy`):** Fysisk perimeterövervakning med geofence-larm kring ambassader och residens i kriszoner.
 
 ---
 
-## 🚀 Snabbstart
+## 🔐 Bring Your Own API Key (BYOAK) & Lokalt Valv
 
-### Alternativ A: Lokal körning (Zero External Setup)
+* **Lokal Kryptering:** Alla API-nycklar, tokens och hemligheter krypteras i vila på användarens maskin med **AES-256-GCM**.
+* **Zero-Knowledge:** Inga nycklar skickas någonsin till centrala servrar utöver den avsedda tjänstens officiella endpoint.
+* **Stödda Integrationer:**
+  * **Svenska & Nordiska register:** Bolagsverket, InfoTorg, Roaring, SCB.
+  * **Internationella bolag & AML:** OpenCorporates, OpenSanctions.
+  * **Cyber & Infrastruktur:** Shodan, Censys, VirusTotal, crt.sh.
+  * **Geoint & Rörelse:** NASA FIRMS, OpenSky Network (ADS-B), OpenStreetMap.
+  * **Kryptovalutor:** Etherscan, Blockstream.
+  * **Säkerhet & Läckor:** HaveIBeenPwned API.
 
-Plattformen kan köras lokalt utan externa databasservrar då den har ett inbyggt, persistent SQLite- och grafminneslager.
+---
 
-#### 1. Backend
-```bash
-# Skapa och aktivera virtuell miljö
+## 🚀 Kom Igång
+
+### 1. Backend (FastAPI & Zero-Setup SQLite/Graph)
+```powershell
 python -m venv venv
-.\venv\Scripts\activate   # Windows
-# source venv/bin/activate # Linux/macOS
-
-# Installera beroenden
+.\venv\Scripts\activate
 pip install -r backend/requirements.txt
-
-# Starta API Gateway
 cd backend
 python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
-API:et och interaktiv Swagger-dokumentation finns nu på: `http://localhost:8000/docs`.
+Swagger-dokumentation: [http://localhost:8000/docs](http://localhost:8000/docs).
 
-#### 2. Frontend
-```bash
+### 2. Frontend (Next.js 14)
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
-Öppna webbläsaren på `http://localhost:3000`.
+Webbgränssnitt: [http://localhost:3000](http://localhost:3000).
 
----
-
-### Alternativ B: Docker Compose (Produktionsmiljö)
-
-Startar hela mikrotjänstarkitekturen inklusive PostgreSQL, Neo4j, Redis och MinIO:
-
+### 3. Docker Compose (Enterprise Stack)
 ```bash
 docker compose up -d
 ```
-
-| Tjänst | Adress | Användarnamn / Lösenord |
-| :--- | :--- | :--- |
-| **Frontend UI** | `http://localhost:3000` | - |
-| **Backend API Gateway** | `http://localhost:8000/docs` | - |
-| **Neo4j Browser** | `http://localhost:7474` | `neo4j` / `openintel_neo4j_pass` |
-| **MinIO Console** | `http://localhost:9001` | `openintel_minio_admin` / `openintel_minio_secret_key` |
+Startar PostgreSQL (`pgvector`), Neo4j, Redis och MinIO S3.
 
 ---
 
-## 🧪 Köra tester
+## 🧪 Köra testsviten
 
-Backend innehåller en komplett testsvit med automatiserade enhetstester och integrationstester:
+Testsviten omfattar 23 automatiserade tester som verifierar API, krypterat valv, transforms, grafmått och playbooks:
 
-```bash
+```powershell
 $env:PYTHONPATH="backend"
 pytest backend/tests -v
 ```
 
 ---
 
-## ⚖️ Juridiska och etiska principer (Ethics by Design)
+## ⚖️ Juridiska Skyddsräcken & Användarvillkor (Ethics by Design)
 
-* **GDPR & Local-First:** Plattformen stödjer lokal lagring utan att data exponeras till tredje part.
-* **Anti-stalking:** Systemet tillhandahåller inte realtidsspårning av privatpersoners mobila enheter eller exploatering av dataläckor.
-* **Offentliga källor:** All datainsamling utgår från öppna protokoll, register och officiella API:er.
+* **GDPR & Local-First:** All utredningsdata stannar lokalt. Ingen telemetri spårar användarens sökningar.
+* **Anti-Stalking:** Systemet tillhandahåller inte realtidsspårning av privatpersoners fysiska positioner eller intrång i privata enheter. I privatpersonsläget exponeras endast *defensiv verifiering*.
+* **Lagliga Källor:** Data hämtas endast från öppna protokoll, officiella API:er och användarens egna licensierade nycklar.

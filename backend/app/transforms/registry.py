@@ -1,8 +1,9 @@
 import asyncio
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 from app.db.database import db
 from app.db.graph_store import graph_store
 from app.models.entity import Entity
+from app.core.vault import credential_vault
 from .base import BaseTransform, TransformResult
 from .dns_transform import DnsWhoisTransform
 from .company_registry_transform import CompanyRegistryTransform
@@ -11,12 +12,17 @@ from .ip_geo_transform import IpGeoTransform
 from .crtsh_subdomain_transform import CrtshSubdomainTransform
 from .sanctions_transform import SanctionsTransform
 from .exif_metadata_transform import ExifMetadataTransform
+from .catfish_transform import CatfishReverseImageTransform
+from .phone_breach_transform import PhoneBreachCheckTransform
+from .romance_scam_transform import RomanceScamCheckTransform
+from .ubo_transform import UboUnwrapperTransform
+from .geoint_crisis_transform import GeointCrisisTransform
 
 
 class TransformRegistry:
     """
     Centralt register och exekveringsmotor för alla OSINT-transforms.
-    Hanterar upptäckt, asynkron parallellkörning, databassynk och evidensarkivering.
+    Hanterar upptäckt, BYOAK-nyckelavkänning, asynkron parallellkörning, databassynk och evidensarkivering.
     """
     def __init__(self):
         self._transforms: Dict[str, BaseTransform] = {}
@@ -31,6 +37,11 @@ class TransformRegistry:
             CrtshSubdomainTransform,
             SanctionsTransform,
             ExifMetadataTransform,
+            CatfishReverseImageTransform,
+            PhoneBreachCheckTransform,
+            RomanceScamCheckTransform,
+            UboUnwrapperTransform,
+            GeointCrisisTransform,
         ]
         for cls in default_classes:
             instance = cls()
@@ -43,15 +54,19 @@ class TransformRegistry:
         return self._transforms.get(name)
 
     def list_transforms(self) -> List[Dict[str, Any]]:
-        """Returnerar metadata om alla registrerade transforms."""
+        """Returnerar metadata om alla registrerade transforms och deras BYOAK-status."""
         result = []
         for t in self._transforms.values():
+            is_unlocked = t.is_available(credential_vault)
             result.append({
                 "name": t.name,
                 "display_name": t.display_name,
                 "description": t.description,
                 "category": t.category,
                 "supported_types": [s.value if hasattr(s, "value") else str(s) for s in t.supported_types],
+                "required_credentials": t.required_credentials,
+                "is_available": is_unlocked,
+                "is_byoak": len(t.required_credentials) > 0,
             })
         return result
 
@@ -65,6 +80,8 @@ class TransformRegistry:
                     "display_name": t.display_name,
                     "description": t.description,
                     "category": t.category,
+                    "required_credentials": t.required_credentials,
+                    "is_available": t.is_available(credential_vault),
                 })
         return available
 

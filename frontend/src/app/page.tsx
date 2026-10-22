@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Case } from "@/types";
+import { Case, WorkspaceRole } from "@/types";
 import { api } from "@/lib/api";
 import GraphCanvas from "@/components/GraphCanvas";
 import TimelineView from "@/components/TimelineView";
@@ -9,6 +9,12 @@ import MapView from "@/components/MapView";
 import EvidenceView from "@/components/EvidenceView";
 import AnalysisReportView from "@/components/AnalysisReportView";
 import CaseManagerModal from "@/components/CaseManagerModal";
+import RoleSelector from "@/components/RoleSelector";
+import DatingSafetyWizard from "@/components/DatingSafetyWizard";
+import JournalismVault from "@/components/JournalismVault";
+import FinanceUboView from "@/components/FinanceUboView";
+import GeointView from "@/components/GeointView";
+import CredentialVaultModal from "@/components/CredentialVaultModal";
 import {
   Network,
   Clock,
@@ -19,29 +25,40 @@ import {
   ChevronDown,
   ShieldAlert,
   Download,
-  Terminal,
+  Key,
+  Sparkles,
+  LayoutDashboard,
 } from "lucide-react";
 
-type ActiveTab = "graph" | "timeline" | "map" | "evidence" | "analysis";
+type ActiveTab = "role_dashboard" | "graph" | "timeline" | "map" | "evidence" | "analysis";
 
 export default function Home() {
   const [cases, setCases] = useState<Case[]>([]);
   const [activeCaseId, setActiveCaseId] = useState<string>("");
-  const [activeTab, setActiveTab] = useState<ActiveTab>("graph");
+  const [roles, setRoles] = useState<WorkspaceRole[]>([]);
+  const [activeRoleId, setActiveRoleId] = useState<string>("dating_safety");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("role_dashboard");
   const [stats, setStats] = useState<any>(null);
   const [showCaseModal, setShowCaseModal] = useState(false);
+  const [showVaultModal, setShowVaultModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const loadCases = async () => {
+  const loadData = async () => {
     try {
       setLoading(true);
-      const data = await api.listCases();
-      setCases(data);
-      if (data.length > 0 && !activeCaseId) {
-        setActiveCaseId(data[0].id);
+      const [caseList, roleList] = await Promise.all([
+        api.listCases(),
+        api.listRoles(),
+      ]);
+
+      setCases(caseList);
+      setRoles(roleList);
+
+      if (caseList.length > 0 && !activeCaseId) {
+        setActiveCaseId(caseList[0].id);
       }
     } catch (err) {
-      console.error("Kunde inte hämta ärenden:", err);
+      console.error("Kunde inte hämta initialdata:", err);
     } finally {
       setLoading(false);
     }
@@ -57,7 +74,7 @@ export default function Home() {
   };
 
   useEffect(() => {
-    loadCases();
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -67,6 +84,13 @@ export default function Home() {
   }, [activeCaseId]);
 
   const activeCase = cases.find((c) => c.id === activeCaseId);
+  const activeRole = roles.find((r) => r.role_id === activeRoleId) || roles[0];
+
+  const handleRoleChange = (newRoleId: string) => {
+    setActiveRoleId(newRoleId);
+    // Växla till rollens dashboard
+    setActiveTab("role_dashboard");
+  };
 
   const handleExportGexf = () => {
     if (!activeCaseId) return;
@@ -77,8 +101,8 @@ export default function Home() {
     <div className="flex flex-col h-screen w-screen overflow-hidden bg-[#090d16]">
       {/* Översta Navigationsbaren */}
       <header className="h-[68px] bg-[#0c121e] border-b border-slate-800/80 px-5 flex items-center justify-between shrink-0 z-30 shadow-md">
-        {/* Vänster: Logotyp & Ärendeväljare */}
-        <div className="flex items-center gap-4">
+        {/* Vänster: Logotyp, Rollväljare & Ärendeväljare */}
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-sky-600 flex items-center justify-center shadow-lg shadow-sky-600/30">
               <Network className="w-5 h-5 text-white" />
@@ -87,27 +111,36 @@ export default function Home() {
               <div className="font-bold text-sm tracking-wide text-slate-100 flex items-center gap-1.5">
                 OpenIntel<span className="text-sky-400">OSINT</span>
                 <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-                  v1.0
+                  v2.0
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400">Länk- & Grafanalysplattform</div>
+              <div className="text-[10px] text-slate-400">Adaptiv Utredningsmiljö</div>
             </div>
           </div>
 
-          <div className="h-6 w-[1px] bg-slate-800" />
+          <div className="h-6 w-[1px] bg-slate-800 mx-1" />
+
+          {/* Rollväljare (Personas) */}
+          {roles.length > 0 && (
+            <RoleSelector
+              roles={roles}
+              activeRoleId={activeRoleId}
+              onSelectRole={handleRoleChange}
+            />
+          )}
 
           {/* Ärendeväljare */}
           <button
             onClick={() => setShowCaseModal(true)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-700/80 hover:border-slate-600 transition group max-w-xs"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-850 border border-slate-700/80 hover:border-slate-600 transition group max-w-[200px]"
           >
             <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
             <div className="text-left truncate">
               <div className="text-xs font-semibold text-slate-200 truncate group-hover:text-white">
-                {activeCase?.title || "Välj utredningsärende..."}
+                {activeCase?.title || "Välj ärende..."}
               </div>
               <div className="text-[10px] text-slate-400 font-mono">
-                {activeCase?.priority ? `Prioritet: ${activeCase.priority.toUpperCase()}` : ""}
+                {activeCase?.priority ? `Prio: ${activeCase.priority.toUpperCase()}` : ""}
               </div>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-1" />
@@ -116,6 +149,18 @@ export default function Home() {
 
         {/* Mitten: Modul- & Vyväljare */}
         <div className="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+          <button
+            onClick={() => setActiveTab("role_dashboard")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
+              activeTab === "role_dashboard"
+                ? "bg-sky-600 text-white shadow-sm font-bold"
+                : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
+            }`}
+          >
+            <LayoutDashboard className="w-3.5 h-3.5 text-sky-300" />
+            {activeRole?.display_name?.split(":")[0] || "Rolldashboard"}
+          </button>
+
           <button
             onClick={() => setActiveTab("graph")}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition ${
@@ -177,21 +222,27 @@ export default function Home() {
           </button>
         </div>
 
-        {/* Höger: Statistik & Export */}
+        {/* Höger: Valv (BYOAK), Statistik & Export */}
         <div className="flex items-center gap-3">
+          {/* BYOAK Valv-knapp */}
+          <button
+            onClick={() => setShowVaultModal(true)}
+            className="flex items-center gap-1.5 text-xs bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 font-semibold px-3 py-1.5 rounded-xl border border-amber-700/60 transition shadow-sm"
+          >
+            <Key className="w-3.5 h-3.5 text-amber-400" />
+            API-Valv (BYOAK)
+          </button>
+
           {stats && (
-            <div className="hidden lg:flex items-center gap-2 text-xs">
-              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-slate-300">
-                <strong className="text-sky-400">{stats.entity_count}</strong> entiteter
+            <div className="hidden xl:flex items-center gap-2 text-xs">
+              <span className="bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg text-slate-300">
+                <strong className="text-sky-400">{stats.entity_count}</strong> noder
               </span>
-              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-slate-300">
-                <strong className="text-amber-400">{stats.relationship_count}</strong> relationer
-              </span>
-              <span className="bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg text-slate-300">
-                <strong className="text-emerald-400">{stats.evidence_count}</strong> bevis
+              <span className="bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg text-slate-300">
+                <strong className="text-amber-400">{stats.relationship_count}</strong> länkar
               </span>
               {stats.sanctions_hits > 0 && (
-                <span className="bg-rose-950/80 border border-rose-800 px-2.5 py-1 rounded-lg text-rose-300 font-semibold flex items-center gap-1">
+                <span className="bg-rose-950/80 border border-rose-800 px-2 py-1 rounded-lg text-rose-300 font-semibold flex items-center gap-1">
                   <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
                   {stats.sanctions_hits} Sanktion
                 </span>
@@ -205,7 +256,7 @@ export default function Home() {
             className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition"
           >
             <Download className="w-3.5 h-3.5 text-slate-400" />
-            Exportera GEXF
+            GEXF
           </button>
         </div>
       </header>
@@ -229,6 +280,34 @@ export default function Home() {
           </div>
         ) : (
           <>
+            {/* Adaptiv Rolldashboard baserat på Persona */}
+            {activeTab === "role_dashboard" && (
+              <>
+                {activeRoleId === "dating_safety" && (
+                  <DatingSafetyWizard
+                    caseId={activeCaseId}
+                    onVerificationDone={() => loadStats(activeCaseId)}
+                  />
+                )}
+                {activeRoleId === "journalism" && (
+                  <JournalismVault caseId={activeCaseId} />
+                )}
+                {activeRoleId === "finance_aml" && (
+                  <FinanceUboView caseId={activeCaseId} />
+                )}
+                {(activeRoleId === "geopolitical" || activeRoleId === "embassy") && (
+                  <GeointView caseId={activeCaseId} />
+                )}
+                {(activeRoleId === "law_enforcement" || activeRoleId === "private_investigator") && (
+                  <GraphCanvas
+                    caseId={activeCaseId}
+                    onRefreshStats={() => loadStats(activeCaseId)}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Standard Fullständiga Moduler */}
             {activeTab === "graph" && (
               <GraphCanvas
                 caseId={activeCaseId}
@@ -255,7 +334,15 @@ export default function Home() {
           activeCaseId={activeCaseId}
           onSelectCase={(id) => setActiveCaseId(id)}
           onClose={() => setShowCaseModal(false)}
-          onCaseCreated={() => loadCases()}
+          onCaseCreated={() => loadData()}
+        />
+      )}
+
+      {/* API-Valv (BYOAK) modal */}
+      {showVaultModal && (
+        <CredentialVaultModal
+          onClose={() => setShowVaultModal(false)}
+          onKeysChanged={() => loadStats(activeCaseId)}
         />
       )}
     </div>

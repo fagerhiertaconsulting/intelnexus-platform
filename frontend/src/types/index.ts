@@ -131,6 +131,9 @@ export interface TransformInfo {
   description: string;
   category: string;
   supported_types?: string[];
+  required_credentials?: string[];
+  is_available?: boolean;
+  is_byoak?: boolean;
 }
 
 export interface MatchCandidate {
@@ -153,4 +156,50 @@ export interface CustodyAudit {
   verified_items: Array<{ id: string; title: string; sha256: string; status: string }>;
   tampered_items: Array<{ id: string; title: string; status: string }>;
   missing_items: Array<{ id: string; title: string; status: string }>;
+}
+
+// --- V2 PERSONAS & BYOAK TYPES ---
+
+export interface WorkspaceRole {
+  role_id: string;
+  display_name: string;
+  description: string;
+  target_audience: string;
+  icon_name: string;
+  theme: string;
+  default_view: "wizard" | "graph" | "document" | "dossier" | "financial" | "map";
+  active_widgets: string[];
+  suggested_api_keys: Array<{ key_name: string; label: string }>;
+  default_playbooks: Array<{ id: string; title: string; description: string }>;
+}
+
+export interface VaultKey {
+  key_name: string;
+  service: string;
+  label: string;
+  domain: string;
+  description: string;
+  requires_paid: boolean;
+  is_configured: boolean;
+  masked_value: string | null;
+  updated_at: string | null;
+}
+
+export interface DatingVerificationResult {
+  target_name: string;
+  overall_verdict: string;
+  risk_level: "LOW" | "WARNING" | "CRITICAL";
+  risk_score_pct: number;
+  risk_factors: string[];
+  recommended_action: string;
+  catfish_check: {
+    detected: boolean;
+    source?: string;
+  };
+  phone_check: {
+    checked: boolean;
+    is_voip: boolean;
+    carrier?: string;
+  };
+  profiles_found: number;
 }

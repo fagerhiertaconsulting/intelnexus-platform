@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from app.models.entity import Entity, EntityType, ProvenanceRecord
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
+from app.core.vault import credential_vault, LocalCredentialVault
 
 
 class TransformResult(BaseModel):
@@ -17,19 +18,31 @@ class TransformResult(BaseModel):
     error_message: Optional[str] = None
     execution_time_seconds: float = 0.0
     logs: List[str] = Field(default_factory=list)
+    unlocked_by_credentials: List[str] = Field(default_factory=list)
 
 
 class BaseTransform(ABC):
     """
     Abstrakt basklass för alla OSINT-transforms.
-    Följer strikta standarder för indatavalidering, asynkron exekvering,
-    proveniensspårbarhet och standardiserad entitetsnormalisering.
+    Stödjer BYOAK (Bring Your Own API Key) med automatisk avkänning av nödvändiga
+    krypterade API-nycklar i det lokala valvet.
     """
     name: str = "base_transform"
     display_name: str = "Base Transform"
     description: str = "Baskonverterare"
     category: str = "general"
     supported_types: Set[EntityType] = set()
+    required_credentials: List[str] = []  # Lista över nyckelnamn i CredentialVault (t.ex. 'SHODAN_API_KEY')
+
+    def is_available(self, vault: Optional[LocalCredentialVault] = None) -> bool:
+        """
+        Returnerar True om alla nödvändiga API-nycklar finns konfigurerade i användarens valv.
+        Om required_credentials är tom (gratiskälla) är den alltid tillgänglig.
+        """
+        if not self.required_credentials:
+            return True
+        v = vault or credential_vault
+        return all(v.has_key(k) for k in self.required_credentials)
 
     def validate_input(self, entity: Entity) -> bool:
         """Validerar att indataentiteten stöds av denna transform."""

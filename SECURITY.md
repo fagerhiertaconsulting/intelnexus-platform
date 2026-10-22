@@ -1,30 +1,28 @@
-# Säkerhetspolicy och Etiska Riktlinjer (Security & Ethics)
+# Säkerhetspolicy och Etiska Riktlinjer (OpenIntel-OSINT v2)
 
 ## 🛡️ Säkerhetspolicy
-OpenIntel-OSINT är utformad för defensiv säkerhetsanalys, brottsbekämpning och transparent granskning.
+OpenIntel-OSINT är utformad för defensiv säkerhetsanalys, brottsbekämpning, granskande journalistik och transparent verifiering.
 
 Om du upptäcker en säkerhetssårbarhet i plattformen, vänligen rapportera den ansvarsfullt till projektets underhållare via GitHub Security Advisories.
 
 ---
 
-## ⚖️ Juridisk och Etisk Ram (Ethics by Design)
+## 🔐 Kredentialvalv & Källsäkerhet (BYOAK Architecture)
 
-För att plattformen ska kunna användas och publiceras lagligt och etiskt gäller följande principer:
-
-### 1. GDPR och Personuppgiftslagstiftning
-* **Lokal kontroll (Local-First):** Systemet skickar ingen utredningsdata till externa molntjänster utan utredarens aktiva godkännande.
-* **Dataminimering:** Endast data som är nödvändig för den specifika utredningen ska inhämtas.
-* **Kryptering i vila:** Känsliga fallfiler och bevisdatabaser lagras lokalt med strikta åtkomstbegränsningar.
-
-### 2. Anti-Stalking och Säkerhetsspärrar
-* **Ingen realtidsspårning av privatpersoners mobila enheter:** Systemet tillhandahåller inte verktyg för spårning av enskilda privatpersoners fysiska positioner.
-* **Ingen exploatering av dataläckor:** Plattformen samlar uteslutande in data från öppna, tillåtna och officiella källor (DNS, WHOIS, publika certifikat, öppna bolagsregister, sanktionslistor).
-* **Ingen obehörig geolokalisering:** Geolokalisering sker endast på IP-infrastruktur och offentligt registrerade adresser eller fotometadata där tillstånd föreligger.
-
-### 3. API ToS och Rate Limits
-* Förfrågningar mot externa API:er respekterar `robots.txt`, plattformsspecifika användarvillkor och implementerar fördröjningar och concurrency limits för att undvika överbelastning.
+1. **Lokal Kryptering i Vila (AES-256-GCM):**
+   * Alla API-nycklar (t.ex. Shodan, Bolagsverket, Roaring, Etherscan) krypteras lokalt på användarens maskin med AES-256-GCM via PBKDF2/Argon2.
+   * Plattformen implementerar strikt *Zero-Knowledge* – inga nycklar eller utredningsdata sänds till centrala servrar utöver den avsedda externa API-tjänsten.
+2. **Källskydd för Whistleblowers:**
+   * Inbyggt verktyg för metadatarensning (`MetadataStripper`) som raderar EXIF, GPS-koordinater, serienummer och kameraavtryck ur källfiler innan de delas eller publiceras.
+3. **Kryptografisk Beviskedja (Chain of Custody):**
+   * Alla inhämtade sidor och svar hashas omedelbart vid ankomst med SHA-256 och lagras i oföränderlig lagring.
 
 ---
 
-## 🔒 Kryptografisk beviskedja
-Alla inhämtade data hashas omedelbart vid ankomst med SHA-256. Genom `api.auditCustody()` kan utredaren när som helst verifiera att inga bevisfiler på lagringsmediet har modifierats, raderats eller utsatts för manipulering.
+## ⚖️ Juridiska och Etiska Skyddsräcken (Ethics by Design)
+
+* **GDPR och Lokal Kontroll:** All utredningsdata sparas uteslutande hos användaren (`local-first`).
+* **Anti-Stalking & Skydd mot trakasserier:**
+  * För privatpersonsläget (t.ex. kontroll av dejt/kontakt) exponeras endast funktioner för *defensiv verifiering* (t.ex. bildgoogling mot catfish-databaser, telefonnummerverifiering, sökning i publika varningslistor för romansbedrägerier).
+  * Systemet tillhandahåller inga verktyg för kontinuerlig realtidsövervakning av enskilda privatpersoners positioner eller obehörig intrångsdata.
+* **Behörighetsstyrd API-tillgång (BYOAK):** Plattformen kringgår inga betalväggar eller autentiseringsspärrar. Tillgång till skyddade eller kommersiella register sker uteslutande via användarens egna, lagligt införskaffade API-nycklar.
