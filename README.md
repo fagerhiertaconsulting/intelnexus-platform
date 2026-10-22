@@ -1,3 +1,5 @@
+<p align="center"><img src="frontend/public/logo.svg" width="320" alt="IntelNexus Platform Logo"></p>
+
 # IntelNexus Platform (v3.0)
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)

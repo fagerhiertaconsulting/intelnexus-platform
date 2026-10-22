@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="iconBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0c1322"/>
+      <stop offset="100%" stop-color="#030712"/>
+    </linearGradient>
+    <linearGradient id="iconNexusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <linearGradient id="iconAccentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f2fe"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="32" height="32" rx="7" fill="url(#iconBgGrad)"/>
+  <rect width="32" height="32" rx="7" fill="none" stroke="#1e293b" stroke-width="1"/>
+
+  <!-- Radar / Reticle Target Ring -->
+  <circle cx="16" cy="16" r="11" fill="none" stroke="#0284c7" stroke-width="1" stroke-dasharray="2 2.5" opacity="0.6"/>
+  <circle cx="16" cy="16" r="6.5" fill="none" stroke="#38bdf8" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Crosshair Ticks -->
+  <line x1="16" y1="2" x2="16" y2="5" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="16" y1="27" x2="16" y2="30" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="2" y1="16" x2="5" y2="16" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="27" y1="16" x2="30" y2="16" stroke="#38bdf8" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Network Graph Connections -->
+  <line x1="16" y1="16" x2="16" y2="8" stroke="url(#iconNexusGrad)" stroke-width="1.2"/>
+  <line x1="16" y1="16" x2="23" y2="13" stroke="url(#iconNexusGrad)" stroke-width="1.2"/>
+  <line x1="16" y1="16" x2="21" y2="22" stroke="url(#iconNexusGrad)" stroke-width="1.2"/>
+  <line x1="16" y1="16" x2="11" y2="22" stroke="url(#iconNexusGrad)" stroke-width="1.2"/>
+  <line x1="16" y1="16" x2="9" y2="13" stroke="url(#iconNexusGrad)" stroke-width="1.2"/>
+
+  <!-- Outer Ring Edges -->
+  <polygon points="16,8 23,13 21,22 11,22 9,13" fill="none" stroke="#0369a1" stroke-width="0.8" stroke-dasharray="1.5 1.5"/>
+
+  <!-- Graph Nodes -->
+  <circle cx="16" cy="8" r="1.6" fill="#38bdf8"/>
+  <circle cx="23" cy="13" r="1.5" fill="#38bdf8"/>
+  <circle cx="21" cy="22" r="1.5" fill="#38bdf8"/>
+  <circle cx="11" cy="22" r="1.5" fill="#38bdf8"/>
+  <circle cx="9" cy="13" r="1.5" fill="#38bdf8"/>
+
+  <!-- Center Core / Focal Nexus -->
+  <circle cx="16" cy="16" r="3" fill="url(#iconAccentGrad)"/>
+  <circle cx="16" cy="16" r="1.2" fill="#ffffff"/>
+</svg>
