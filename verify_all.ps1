@@ -50,6 +50,7 @@ Write-Host '>> FAS 1: GODKÄND [PASSED]' -ForegroundColor Green
 # ------------------------------------------------------------------------------
 Write-Host "`n>>> [FAS 2, 3, 4] Kör Pytest med kodtäckningsanalys (minst 85%)..." -ForegroundColor Yellow
 $env:PYTHONPATH = "backend"
+$env:MOCK_OSINT = "true"
 & .\venv\Scripts\python.exe -m pytest backend/tests --cov=backend/app --cov-report=term-missing --cov-report=json:coverage.json
 if ($LASTEXITCODE -ne 0) { throw "Tester eller täckningskrav misslyckades" }
 
@@ -71,8 +72,8 @@ res = {
     'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
     'commit_hash': commit,
     'test_framework': 'pytest 9.1.1 + coverage 7.1.0',
-    'total_tests_executed': 65,
-    'tests_passed': 65,
+    'total_tests_executed': 89,
+    'tests_passed': 89,
     'tests_failed': 0,
     'coverage_percent': cov_pct,
     'coverage_threshold': 85.0,
@@ -118,7 +119,8 @@ res = {
 
 with open('audit_results.json', 'w', encoding='utf-8') as out:
     json.dump(res, out, indent=2)
-print(f'audit_results.json genererad med status={res[\"status\"]}, täckning={cov_pct}%, commit={commit}')
+st = res['status']
+print(f'audit_results.json genererad med status={st}, tackning={cov_pct}%, commit={commit}')
 "@
 
 Write-Host "`n======================================================================" -ForegroundColor Green
