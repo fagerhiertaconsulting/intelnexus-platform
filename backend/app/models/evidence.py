@@ -1,7 +1,8 @@
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 from uuid import uuid4
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
+from .entity import SourceReliability, InfoCredibility
 
 
 class EvidenceItem(BaseModel):
@@ -15,7 +16,25 @@ class EvidenceItem(BaseModel):
     source_url: Optional[str] = Field(None, description="Ursprunglig källa eller endpoint")
     collector_plugin: Optional[str] = Field(None, description="Modul som samlade in beviset")
     metadata: Dict[str, Any] = Field(default_factory=dict, description="Ytterligare metadata (headers, IP, statuskod)")
-    recorded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Tidpunkt för arkivering")
+    source_reliability: SourceReliability = Field(
+        default=SourceReliability.B, description="NATO Admiralty källtillförlitlighet (A-F)"
+    )
+    info_credibility: InfoCredibility = Field(
+        default=InfoCredibility.PROBABLE, description="NATO Admiralty sannolikhetsgrad (1-6)"
+    )
+    recorded_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc), description="Tidpunkt för arkivering"
+    )
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def admiralty_code(self) -> str:
+        """Returnerar den kombinerade NATO Admiralty källkoden, t.ex. 'A1' eller 'B2'."""
+        rel = (
+            self.source_reliability.value if hasattr(self.source_reliability, "value") else str(self.source_reliability)
+        )
+        cred = self.info_credibility.value if hasattr(self.info_credibility, "value") else str(self.info_credibility)
+        return f"{rel}{cred}"
 
 
 class EvidenceCreateRequest(BaseModel):
@@ -26,3 +45,5 @@ class EvidenceCreateRequest(BaseModel):
     content: str
     mime_type: Optional[str] = "text/plain"
     metadata: Optional[Dict[str, Any]] = None
+    source_reliability: Optional[SourceReliability] = None
+    info_credibility: Optional[InfoCredibility] = None

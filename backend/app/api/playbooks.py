@@ -1,6 +1,6 @@
-from typing import Any, Dict, Optional
+from typing import Optional
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from app.core.playbooks import playbook_orchestrator
 from app.core.metadata_stripper import metadata_stripper
 from app.db.object_store import object_store

@@ -1,8 +1,6 @@
 import io
-import json
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 import networkx as nx
-from app.config import settings
 from app.db.database import db
 from app.models.entity import Entity
 from app.models.relationship import Relationship
@@ -14,6 +12,7 @@ class GraphStore:
     (PageRank, Betweenness centrality, Shortest Path) med automatisk synkronisering
     mot databasen och exportmöjligheter (GEXF, GraphML, JSON, CSV).
     """
+
     def __init__(self):
         self._graphs: Dict[str, nx.MultiDiGraph] = {}
 
@@ -80,7 +79,9 @@ class GraphStore:
                 rel.target_id,
                 key=rel.id,
                 id=rel.id,
-                relation_type=rel.relation_type.value if hasattr(rel.relation_type, "value") else str(rel.relation_type),
+                relation_type=rel.relation_type.value
+                if hasattr(rel.relation_type, "value")
+                else str(rel.relation_type),
                 confidence_score=rel.confidence_score,
                 attributes=rel.attributes,
                 created_at=rel.created_at.isoformat(),
@@ -94,35 +95,39 @@ class GraphStore:
         G = self.get_graph(case_id)
         nodes = []
         for node_id, data in G.nodes(data=True):
-            nodes.append({
-                "id": node_id,
-                "data": {
+            nodes.append(
+                {
                     "id": node_id,
-                    "label": data.get("name", node_id),
-                    "type": data.get("type", "unknown"),
-                    "aliases": data.get("aliases", []),
-                    "confidence_score": data.get("confidence_score", 1.0),
-                    "attributes": data.get("attributes", {}),
-                    "created_at": data.get("created_at"),
+                    "data": {
+                        "id": node_id,
+                        "label": data.get("name", node_id),
+                        "type": data.get("type", "unknown"),
+                        "aliases": data.get("aliases", []),
+                        "confidence_score": data.get("confidence_score", 1.0),
+                        "attributes": data.get("attributes", {}),
+                        "created_at": data.get("created_at"),
+                    },
                 }
-            })
+            )
 
         edges = []
         for u, v, k, data in G.edges(keys=True, data=True):
-            edges.append({
-                "id": k,
-                "source": u,
-                "target": v,
-                "data": {
+            edges.append(
+                {
                     "id": k,
                     "source": u,
                     "target": v,
-                    "label": data.get("relation_type", "RELATED_TO"),
-                    "relation_type": data.get("relation_type", "RELATED_TO"),
-                    "confidence_score": data.get("confidence_score", 1.0),
-                    "attributes": data.get("attributes", {}),
+                    "data": {
+                        "id": k,
+                        "source": u,
+                        "target": v,
+                        "label": data.get("relation_type", "RELATED_TO"),
+                        "relation_type": data.get("relation_type", "RELATED_TO"),
+                        "confidence_score": data.get("confidence_score", 1.0),
+                        "attributes": data.get("attributes", {}),
+                    },
                 }
-            })
+            )
 
         return {
             "case_id": case_id,
@@ -164,18 +169,22 @@ class GraphStore:
         for node_id in G.nodes:
             node_name = G.nodes[node_id].get("name", node_id)
             node_type = G.nodes[node_id].get("type", "unknown")
-            composite_score = (pagerank.get(node_id, 0.0) * 0.4) + \
-                               (betweenness.get(node_id, 0.0) * 0.4) + \
-                               (degree_cent.get(node_id, 0.0) * 0.2)
-            rankings.append({
-                "id": node_id,
-                "name": node_name,
-                "type": node_type,
-                "score": round(composite_score, 4),
-                "pagerank": round(pagerank.get(node_id, 0.0), 4),
-                "betweenness": round(betweenness.get(node_id, 0.0), 4),
-                "degree": round(degree_cent.get(node_id, 0.0), 4),
-            })
+            composite_score = (
+                (pagerank.get(node_id, 0.0) * 0.4)
+                + (betweenness.get(node_id, 0.0) * 0.4)
+                + (degree_cent.get(node_id, 0.0) * 0.2)
+            )
+            rankings.append(
+                {
+                    "id": node_id,
+                    "name": node_name,
+                    "type": node_type,
+                    "score": round(composite_score, 4),
+                    "pagerank": round(pagerank.get(node_id, 0.0), 4),
+                    "betweenness": round(betweenness.get(node_id, 0.0), 4),
+                    "degree": round(degree_cent.get(node_id, 0.0), 4),
+                }
+            )
 
         rankings.sort(key=lambda x: x["score"], reverse=True)
 
@@ -204,7 +213,7 @@ class GraphStore:
         G = self.get_graph(case_id)
         if not G.has_node(node_id):
             return {"nodes": [], "edges": []}
-        
+
         undirected = G.to_undirected()
         sub_nodes = nx.ego_graph(undirected, node_id, radius=radius).nodes()
         subgraph = G.subgraph(sub_nodes)
@@ -265,7 +274,9 @@ class GraphStore:
         nodes_csv = "id,name,type,confidence_score,created_at\n"
         for n, d in G.nodes(data=True):
             name = d.get("name", "").replace('"', '""')
-            nodes_csv += f'"{n}","{name}","{d.get("type", "")}",{d.get("confidence_score", 1.0)},"{d.get("created_at", "")}"\n'
+            nodes_csv += (
+                f'"{n}","{name}","{d.get("type", "")}",{d.get("confidence_score", 1.0)},"{d.get("created_at", "")}"\n'
+            )
 
         edges_csv = "id,source,target,relation_type,confidence_score\n"
         for u, v, k, d in G.edges(keys=True, data=True):

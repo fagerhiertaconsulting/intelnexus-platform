@@ -1,5 +1,5 @@
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Dict, List, Optional
+from pydantic import BaseModel
 
 
 class WorkspaceRoleConfig(BaseModel):
@@ -36,10 +36,13 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
             {"key_name": "HIBP_API_KEY", "label": "HaveIBeenPwned API (Läckta lösenord & konton)"},
         ],
         default_playbooks=[
-            {"id": "dating_verification_playbook", "title": "Komplett dejt- och kontaktverifiering", "description": "Kör omvänd bildsökning, kontrollerar VoIP/engångsnummer och söker i varningslistor."}
+            {
+                "id": "dating_verification_playbook",
+                "title": "Komplett dejt- och kontaktverifiering",
+                "description": "Kör omvänd bildsökning, kontrollerar VoIP/engångsnummer och söker i varningslistor.",
+            }
         ],
     ),
-
     # B. Rättsväsende & Polis
     "law_enforcement": WorkspaceRoleConfig(
         role_id="law_enforcement",
@@ -62,11 +65,18 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
             {"key_name": "SHODAN_API_KEY", "label": "Shodan Enterprise"},
         ],
         default_playbooks=[
-            {"id": "infrastructure_correlation_playbook", "title": "Infrastruktur- & Cyberkorrelation", "description": "Kartlägger nätverksinfrastruktur, VPN-maskering, certifikat och domänägare."},
-            {"id": "fup_evidence_audit_playbook", "title": "Beviskedjeaudit för FUP", "description": "Validerar SHA-256 kontrollsummor och sammanställer forensisk bevistabell."}
+            {
+                "id": "infrastructure_correlation_playbook",
+                "title": "Infrastruktur- & Cyberkorrelation",
+                "description": "Kartlägger nätverksinfrastruktur, VPN-maskering, certifikat och domänägare.",
+            },
+            {
+                "id": "fup_evidence_audit_playbook",
+                "title": "Beviskedjeaudit för FUP",
+                "description": "Validerar SHA-256 kontrollsummor och sammanställer forensisk bevistabell.",
+            },
         ],
     ),
-
     # C. Undersökande Journalistik
     "journalism": WorkspaceRoleConfig(
         role_id="journalism",
@@ -87,11 +97,18 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
             {"key_name": "OPENCORPORATES_API_KEY", "label": "OpenCorporates Global API"},
         ],
         default_playbooks=[
-            {"id": "whistleblower_sanitization_flow", "title": "Källskydd & Metadata-tvätt", "description": "Rensar all EXIF-, GPS- och enhetsmetadata ur dokument och bilder innan publicering."},
-            {"id": "public_procurement_audit", "title": "Granskning av upphandlingar", "description": "Korsrefererar bolagsstyrelser mot offentliga företrädare."}
+            {
+                "id": "whistleblower_sanitization_flow",
+                "title": "Källskydd & Metadata-tvätt",
+                "description": "Rensar all EXIF-, GPS- och enhetsmetadata ur dokument och bilder innan publicering.",
+            },
+            {
+                "id": "public_procurement_audit",
+                "title": "Granskning av upphandlingar",
+                "description": "Korsrefererar bolagsstyrelser mot offentliga företrädare.",
+            },
         ],
     ),
-
     # D. Privatdetektiv & Säkerhetskonsult
     "private_investigator": WorkspaceRoleConfig(
         role_id="private_investigator",
@@ -114,10 +131,13 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
             {"key_name": "ROARING_API_KEY", "label": "Roaring Business Intelligence"},
         ],
         default_playbooks=[
-            {"id": "full_background_dossier", "title": "Fullständig 360-graders bakgrundskontroll", "description": "Kombinerar adresshistorik, bolagsengagemang, fordon och digitala fotspår."}
+            {
+                "id": "full_background_dossier",
+                "title": "Fullständig 360-graders bakgrundskontroll",
+                "description": "Kombinerar adresshistorik, bolagsengagemang, fordon och digitala fotspår.",
+            }
         ],
     ),
-
     # E. Finansanalytiker & Compliance (AML/UBO)
     "finance_aml": WorkspaceRoleConfig(
         role_id="finance_aml",
@@ -140,11 +160,18 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
             {"key_name": "ROARING_API_KEY", "label": "Roaring UBO Register"},
         ],
         default_playbooks=[
-            {"id": "ubo_unwrapping_playbook", "title": "Rekursiv UBO-upplösning", "description": "Identifierar verkliga huvudmän genom holdingbolagskedjor och offshorestrukturer."},
-            {"id": "sanctions_deep_screening", "title": "Fördjupad sanktions- & PEP-granskning", "description": "Matchar mot OFAC SDN, EU Consolidated och FN med fuzzy Jaro-Winkler."}
+            {
+                "id": "ubo_unwrapping_playbook",
+                "title": "Rekursiv UBO-upplösning",
+                "description": "Identifierar verkliga huvudmän genom holdingbolagskedjor och offshorestrukturer.",
+            },
+            {
+                "id": "sanctions_deep_screening",
+                "title": "Fördjupad sanktions- & PEP-granskning",
+                "description": "Matchar mot OFAC SDN, EU Consolidated och FN med fuzzy Jaro-Winkler.",
+            },
         ],
     ),
-
     # F. Geopolitisk analytiker & Ambassad
     "geopolitical": WorkspaceRoleConfig(
         role_id="geopolitical",
@@ -166,10 +193,13 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
             {"key_name": "OPENSKY_CREDENTIALS", "label": "OpenSky Network (ADS-B)"},
         ],
         default_playbooks=[
-            {"id": "crisis_zone_correlation", "title": "Kriszonsövervakning", "description": "Kombinerar satellitlager, NASA FIRMS värmedata och flygtranspondrar i realtid."}
+            {
+                "id": "crisis_zone_correlation",
+                "title": "Kriszonsövervakning",
+                "description": "Kombinerar satellitlager, NASA FIRMS värmedata och flygtranspondrar i realtid.",
+            }
         ],
     ),
-
     # G. Diplomatisk Beskickning & Fysisk Säkerhet
     "embassy": WorkspaceRoleConfig(
         role_id="embassy",
@@ -190,7 +220,80 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
             {"key_name": "NASA_FIRMS_KEY", "label": "NASA FIRMS API"},
         ],
         default_playbooks=[
-            {"id": "perimeter_threat_assessment", "title": "Perimeter Threat Assessment", "description": "Analyserar incidenter och oroligheter inom 5 km radie kring beskickningen."}
+            {
+                "id": "perimeter_threat_assessment",
+                "title": "Perimeter Threat Assessment",
+                "description": "Analyserar incidenter och oroligheter inom 5 km radie kring beskickningen.",
+            }
+        ],
+    ),
+    # H. Cyber Threat Intelligence (CTI) & Incident Response
+    "cyber_threat_intelligence": WorkspaceRoleConfig(
+        role_id="cyber_threat_intelligence",
+        display_name="Cyber Threat Intelligence (CTI) & Incident Response",
+        description="Kartlägger cyberhotaktörer, avancerade hotgrupper (APT), infrastruktur och intrångsindikatorer (IoC:er).",
+        target_audience="CTI-analytiker, SOC/CERT och incident responders",
+        icon_name="ShieldAlert",
+        theme="cti_matrix",
+        default_view="graph",
+        active_widgets=[
+            "mitre_attack_navigator",
+            "ioc_correlation_engine",
+            "stix_taxii_export",
+            "threat_actor_map",
+            "cve_vulnerability_feed",
+        ],
+        suggested_api_keys=[
+            {"key_name": "VIRUSTOTAL_API_KEY", "label": "VirusTotal Enterprise"},
+            {"key_name": "ALIENVAULT_OTX_KEY", "label": "AlienVault OTX API"},
+            {"key_name": "SHODAN_API_KEY", "label": "Shodan Enterprise"},
+            {"key_name": "URLHAUS_API_KEY", "label": "URLhaus Malicious URL API"},
+        ],
+        default_playbooks=[
+            {
+                "id": "ioc_enrichment_playbook",
+                "title": "IoC-berikning & Korrelation",
+                "description": "Korsrefererar IP, domäner och filhashar mot kända hotdatabaser.",
+            },
+            {
+                "id": "apt_campaign_mapping",
+                "title": "APT Kampanjkartläggning",
+                "description": "Kopplar observerade aktiviteter och infrastruktur till MITRE ATT&CK TTP:er.",
+            },
+        ],
+    ),
+    # I. Mänskliga Rättigheter, Faktagranskning & Krigsbrottsutredning (Bellingcat-modellen)
+    "fact_checking_human_rights": WorkspaceRoleConfig(
+        role_id="fact_checking_human_rights",
+        display_name="Mänskliga Rättigheter & Faktagranskning (Bellingcat)",
+        description="Geoverifiering, kronolokalisering och säkerställande av digitala bevis från krigs- och konfliktområden enligt Bellingcat-metodiken.",
+        target_audience="Faktagranskare, krigsbrottsutredare, NGO:er och människorättsjurister",
+        icon_name="CameraSearch",
+        theme="bellingcat_earth",
+        default_view="map",
+        active_widgets=[
+            "chrono_suncalc_tool",
+            "reverse_video_fragment_matcher",
+            "environmental_anomaly_firms",
+            "geolocation_shadow_verifier",
+            "archive_timestamper",
+        ],
+        suggested_api_keys=[
+            {"key_name": "NASA_FIRMS_KEY", "label": "NASA FIRMS Satellitbranddetektering"},
+            {"key_name": "GOOGLE_GEOCODING_API_KEY", "label": "Google Maps / Elevation API"},
+            {"key_name": "WAYBACK_MACHINE_KEY", "label": "Internet Archive Wayback API"},
+        ],
+        default_playbooks=[
+            {
+                "id": "geolocation_verification_playbook",
+                "title": "Geoverifiering & Kronolokalisering",
+                "description": "Validerar foton och video mot satellitbilder, skuggvinklar och väderdata.",
+            },
+            {
+                "id": "war_crimes_evidence_preservation",
+                "title": "Bevissäkring av konfliktmaterial",
+                "description": "Fryser och hashar sociala medier-klipp med intakt beviskedja enligt Berkeley-protokollet.",
+            },
         ],
     ),
 }
@@ -198,6 +301,7 @@ WORKSPACE_ROLES: Dict[str, WorkspaceRoleConfig] = {
 
 class RoleManager:
     """Hanterar tillgängliga roller och sparar aktiv roll per ärende eller användarsession."""
+
     def list_roles(self) -> List[WorkspaceRoleConfig]:
         return list(WORKSPACE_ROLES.values())
 

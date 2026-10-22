@@ -1,41 +1,43 @@
-from typing import Any, Dict, List
-from fastapi import APIRouter, HTTPException
+from typing import Any, Dict, List, Optional
+from fastapi import APIRouter, Depends, Header, HTTPException
 from app.db.database import db
-from app.db.graph_store import graph_store
 from app.models.case import Case, CaseCreateRequest, CaseUpdateRequest
+from app.api.two_factor import require_elevated_session
 
 router = APIRouter(prefix="/cases", tags=["Cases"])
 
 
 @router.post("", response_model=Case)
-def create_case(req: CaseCreateRequest):
+def create_case(req: CaseCreateRequest, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
+    if x_user_id and req.investigator in ("Analyst", "default_user", ""):
+        req.investigator = x_user_id
     return db.create_case(req)
 
 
 @router.get("", response_model=List[Case])
-def list_cases():
-    return db.list_cases()
+def list_cases(x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
+    return db.list_cases(investigator=x_user_id)
 
 
 @router.get("/{case_id}", response_model=Case)
-def get_case(case_id: str):
-    case = db.get_case(case_id)
+def get_case(case_id: str, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
+    case = db.get_case(case_id, investigator=x_user_id)
     if not case:
         raise HTTPException(status_code=404, detail="Ärende hittades inte")
     return case
 
 
 @router.patch("/{case_id}", response_model=Case)
-def update_case(case_id: str, req: CaseUpdateRequest):
-    updated = db.update_case(case_id, req)
+def update_case(case_id: str, req: CaseUpdateRequest, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
+    updated = db.update_case(case_id, req, investigator=x_user_id)
     if not updated:
         raise HTTPException(status_code=404, detail="Ärende hittades inte")
     return updated
 
 
-@router.delete("/{case_id}")
-def delete_case(case_id: str):
-    deleted = db.delete_case(case_id)
+@router.delete("/{case_id}", dependencies=[Depends(require_elevated_session)])
+def delete_case(case_id: str, x_user_id: Optional[str] = Header(None, alias="X-User-Id")):
+    deleted = db.delete_case(case_id, investigator=x_user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Ärende hittades inte")
     return {"message": f"Ärende {case_id} och alla kopplade entiteter har raderats."}
@@ -46,7 +48,7 @@ def get_case_stats(case_id: str) -> Dict[str, Any]:
     case = db.get_case(case_id)
     if not case:
         raise HTTPException(status_code=404, detail="Ärende hittades inte")
-    
+
     entities = db.list_entities(case_id=case_id)
     relationships = db.list_relationships(case_id=case_id)
     evidence = db.list_evidence(case_id=case_id)

@@ -10,6 +10,7 @@ class MetadataStripper:
     Raderar all EXIF-, GPS-, kamera- och enhetsmetadata från digitala bilder
     och dokument för att skydda källor och visselblåsare.
     """
+
     @staticmethod
     def strip_image_metadata(input_bytes: bytes, format_hint: str = "JPEG") -> Tuple[bytes, Dict[str, str]]:
         """

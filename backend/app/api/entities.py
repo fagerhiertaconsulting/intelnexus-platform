@@ -14,12 +14,20 @@ router = APIRouter(prefix="/entities", tags=["Entities & Relationships"])
 def create_entity(req: EntityCreateRequest):
     provenance = []
     if req.provenance_source:
-        provenance.append(ProvenanceRecord(
-            source_url=req.provenance_source,
-            sha256="manual_seed",
-            collector_plugin=req.provenance_plugin or "analyst_manual_entry",
-            note="Manuellt inmatad seed-nod av utredare",
-        ))
+        provenance.append(
+            ProvenanceRecord(
+                source_url=req.provenance_source,
+                sha256="manual_seed",
+                collector_plugin=req.provenance_plugin or "analyst_manual_entry",
+                note="Manuellt inmatad seed-nod av utredare",
+            )
+        )
+
+    extra_kwargs: Dict[str, Any] = {}
+    if req.source_reliability is not None:
+        extra_kwargs["source_reliability"] = req.source_reliability
+    if req.info_credibility is not None:
+        extra_kwargs["info_credibility"] = req.info_credibility
 
     entity = Entity(
         type=req.type,
@@ -29,6 +37,7 @@ def create_entity(req: EntityCreateRequest):
         provenance=provenance,
         confidence_score=req.confidence_score,
         case_id=req.case_id,
+        **extra_kwargs,
     )
     saved = db.save_entity(entity)
     if req.case_id:
@@ -41,26 +50,8 @@ def list_entities(case_id: Optional[str] = None, entity_type: Optional[str] = No
     return db.list_entities(case_id=case_id, entity_type=entity_type)
 
 
-@router.get("/{entity_id}", response_model=Entity)
-def get_entity(entity_id: str):
-    entity = db.get_entity(entity_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entitet hittades inte")
-    return entity
-
-
-@router.delete("/{entity_id}")
-def delete_entity(entity_id: str):
-    entity = db.get_entity(entity_id)
-    if not entity:
-        raise HTTPException(status_code=404, detail="Entitet hittades inte")
-    db.delete_entity(entity_id)
-    if entity.case_id:
-        graph_store.reload_case_graph(entity.case_id)
-    return {"message": f"Entitet {entity_id} raderad."}
-
-
 # --- RELATIONSHIPS ---
+
 
 @router.post("/relationships", response_model=Relationship)
 def create_relationship(req: RelationshipCreateRequest):
@@ -72,12 +63,14 @@ def create_relationship(req: RelationshipCreateRequest):
     case_id = req.case_id or source.case_id or target.case_id
     provenance = []
     if req.provenance_source:
-        provenance.append(ProvenanceRecord(
-            source_url=req.provenance_source,
-            sha256="manual_link",
-            collector_plugin=req.provenance_plugin or "analyst_manual_link",
-            note="Manuell relation kopplad av utredare",
-        ))
+        provenance.append(
+            ProvenanceRecord(
+                source_url=req.provenance_source,
+                sha256="manual_link",
+                collector_plugin=req.provenance_plugin or "analyst_manual_link",
+                note="Manuell relation kopplad av utredare",
+            )
+        )
 
     rel = Relationship(
         source_id=req.source_id,
@@ -112,6 +105,7 @@ def delete_relationship(rel_id: str):
 
 # --- ENTITY RESOLUTION ---
 
+
 class MergeRequest(BaseModel):
     primary_id: str
     secondary_id: str
@@ -127,9 +121,29 @@ def find_resolution_matches(case_id: str, threshold: float = Query(0.85, ge=0.5,
 def merge_entities_endpoint(req: MergeRequest):
     try:
         return entity_resolver.merge_entities(
-            primary_id=req.primary_id,
-            secondary_id=req.secondary_id,
-            case_id=req.case_id
+            primary_id=req.primary_id, secondary_id=req.secondary_id, case_id=req.case_id
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+# --- SPECIFIC ENTITY BY ID ---
+
+
+@router.get("/{entity_id}", response_model=Entity)
+def get_entity(entity_id: str):
+    entity = db.get_entity(entity_id)
+    if not entity:
+        raise HTTPException(status_code=404, detail="Entitet hittades inte")
+    return entity
+
+
+@router.delete("/{entity_id}")
+def delete_entity(entity_id: str):
+    entity = db.get_entity(entity_id)
+    if not entity:
+        raise HTTPException(status_code=404, detail="Entitet hittades inte")
+    db.delete_entity(entity_id)
+    if entity.case_id:
+        graph_store.reload_case_graph(entity.case_id)
+    return {"message": f"Entitet {entity_id} raderad."}

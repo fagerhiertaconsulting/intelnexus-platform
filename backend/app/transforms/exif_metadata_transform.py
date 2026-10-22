@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Set
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -59,7 +59,7 @@ class ExifMetadataTransform(BaseTransform):
         if raw_bytes:
             try:
                 img = Image.open(io.BytesIO(raw_bytes))
-                info = img._getexif()
+                info = getattr(img, "_getexif", lambda: None)()
                 if info:
                     for tag, value in info.items():
                         decoded = TAGS.get(tag, tag)
@@ -151,14 +151,16 @@ class ExifMetadataTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(loc_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=loc_entity.id,
-                relation_type=RelationshipType.LOCATED_AT,
-                attributes={"method": "EXIF_GPS_TAG"},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=loc_entity.id,
+                    relation_type=RelationshipType.LOCATED_AT,
+                    attributes={"method": "EXIF_GPS_TAG"},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         exec_time = time.time() - start_time
         logs.append(f"EXIF-transform klar på {exec_time:.2f}s.")

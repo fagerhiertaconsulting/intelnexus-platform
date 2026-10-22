@@ -8,8 +8,10 @@ import {
   GraphData,
   GraphMetrics,
   TransformInfo,
+  TransformDryRunEstimate,
 } from "@/types";
 import { api } from "@/lib/api";
+import TransformDryRunModal from "@/components/TransformDryRunModal";
 import {
   Search,
   Filter,
@@ -60,6 +62,13 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
   const [availableTransforms, setAvailableTransforms] = useState<TransformInfo[]>([]);
   const [executingTransform, setExecutingTransform] = useState(false);
   const [transformMessage, setTransformMessage] = useState<string | null>(null);
+
+  // Dry-run modal state
+  const [dryRunModalOpen, setDryRunModalOpen] = useState(false);
+  const [selectedTransformForDryRun, setSelectedTransformForDryRun] = useState<TransformInfo | null>(null);
+  const [dryRunEstimate, setDryRunEstimate] = useState<TransformDryRunEstimate | null>(null);
+  const [loadingEstimate, setLoadingEstimate] = useState(false);
+  const [dryRunError, setDryRunError] = useState<string | null>(null);
 
   // Filter state
   const [activeTypes, setActiveTypes] = useState<Set<string>>(
@@ -129,13 +138,22 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
 
       if (isVisible && isSearchMatch) {
         const isSanctioned = n.data.attributes?.sanctioned === true;
+        const admCode =
+          n.data.admiralty_code ||
+          (n.data.source_reliability && n.data.info_credibility
+            ? `${n.data.source_reliability}${n.data.info_credibility}`
+            : null);
+        const displayLabel = admCode ? `[${admCode}] ${n.data.label}` : n.data.label;
+
         elements.push({
           group: "nodes",
           data: {
             ...n.data,
+            label: displayLabel,
+            admiralty_code: admCode,
             color: TYPE_COLORS[n.data.type] || "#94a3b8",
-            borderColor: isSanctioned ? "#ef4444" : "#1e293b",
-            borderWidth: isSanctioned ? 4 : 2,
+            borderColor: isSanctioned ? "#ef4444" : admCode ? "#38bdf8" : "#1e293b",
+            borderWidth: isSanctioned ? 4 : admCode ? 3 : 2,
           },
         });
       }
@@ -257,6 +275,46 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
   const runLayout = (layoutName: string) => {
     if (!cyRef.current) return;
     (cyRef.current.layout as any)({ name: layoutName, animate: true, animationDuration: 500 }).run();
+  };
+
+  const handleInitiateTransform = async (transform: TransformInfo) => {
+    if (!selectedNode) return;
+    setSelectedTransformForDryRun(transform);
+    setDryRunModalOpen(true);
+    setLoadingEstimate(true);
+    setDryRunError(null);
+    try {
+      const est = await api.dryRunTransform(transform.name, selectedNode.id);
+      setDryRunEstimate(est);
+    } catch (err: any) {
+      setDryRunError(err.message || "Kunde inte beräkna kostnadsestimat");
+    } finally {
+      setLoadingEstimate(false);
+    }
+  };
+
+  const handleConfirmExecuteTransform = async () => {
+    if (!selectedTransformForDryRun || !selectedNode) return;
+    try {
+      setExecutingTransform(true);
+      setTransformMessage(`Kör ${selectedTransformForDryRun.display_name}...`);
+      const result = await api.executeTransform(selectedTransformForDryRun.name, selectedNode.id);
+      if (result.success) {
+        setTransformMessage(
+          `Klart! Skapade ${result.entities?.length || 0} entiteter och ${result.relationships?.length || 0} kopplingar.`
+        );
+        await loadGraph();
+        if (onRefreshStats) onRefreshStats();
+        setDryRunModalOpen(false);
+      } else {
+        setDryRunError(`Fel: ${result.error_message}`);
+      }
+    } catch (err: any) {
+      setDryRunError(`Körningsfel: ${err.message}`);
+    } finally {
+      setExecutingTransform(false);
+      setTimeout(() => setTransformMessage(null), 6000);
+    }
   };
 
   const handleRunTransform = async (transformName: string) => {
@@ -488,15 +546,23 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
             {/* Header */}
             <div className="flex items-start justify-between pb-3 border-b border-slate-800">
               <div>
-                <span
-                  className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded"
-                  style={{
-                    backgroundColor: `${TYPE_COLORS[selectedNode.type as EntityType]}22`,
-                    color: TYPE_COLORS[selectedNode.type as EntityType],
-                  }}
-                >
-                  {selectedNode.type}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span
+                    className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded"
+                    style={{
+                      backgroundColor: `${TYPE_COLORS[selectedNode.type as EntityType]}22`,
+                      color: TYPE_COLORS[selectedNode.type as EntityType],
+                    }}
+                  >
+                    {selectedNode.type}
+                  </span>
+                  {selectedNode.admiralty_code && (
+                    <span className="text-[10px] font-bold tracking-wider px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-700/80 shadow-sm flex items-center gap-1">
+                      <span>NATO:</span>
+                      <span className="font-mono font-extrabold text-blue-200">[{selectedNode.admiralty_code}]</span>
+                    </span>
+                  )}
+                </div>
                 <h3 className="text-base font-bold text-slate-100 mt-1 break-words">
                   {selectedNode.label}
                 </h3>
@@ -542,7 +608,7 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
                     <button
                       key={t.name}
                       disabled={executingTransform}
-                      onClick={() => handleRunTransform(t.name)}
+                      onClick={() => handleInitiateTransform(t)}
                       className="w-full text-left p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 hover:border-sky-500/50 transition group flex items-center justify-between"
                     >
                       <div>
@@ -557,7 +623,7 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
                 </div>
               ) : (
                 <div className="text-xs text-slate-500 italic p-3 bg-slate-900/50 rounded-lg border border-slate-800">
-                  Inga specifika transforms tillgängliga för nodtypen '{selectedNode.type}'.
+                  Inga specifika transforms tillgängliga för nodtypen &quot;{selectedNode.type}&quot;.
                 </div>
               )}
             </div>
@@ -866,6 +932,19 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
           </div>
         </div>
       )}
+
+      {/* Dry-Run Bekräftelse & FinOps Modal */}
+      <TransformDryRunModal
+        isOpen={dryRunModalOpen}
+        onClose={() => setDryRunModalOpen(false)}
+        onConfirm={handleConfirmExecuteTransform}
+        transformInfo={selectedTransformForDryRun}
+        targetNode={selectedNode}
+        estimate={dryRunEstimate}
+        loading={loadingEstimate}
+        executing={executingTransform}
+        errorMessage={dryRunError}
+      />
     </div>
   );
 }

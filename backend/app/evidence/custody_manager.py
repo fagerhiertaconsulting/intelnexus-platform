@@ -1,7 +1,6 @@
 import time
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 import httpx
 from app.db.database import db
 from app.db.object_store import object_store
@@ -13,6 +12,7 @@ class CustodyManager:
     Hanterar beviskedja (Chain of Custody) och automatisk webbarkivering med
     kryptografisk SHA-256 hashning och verifiering.
     """
+
     async def capture_web_snapshot(self, url: str, case_id: str, title: Optional[str] = None) -> EvidenceItem:
         """
         Hämtar och fryser en webbsida i oföränderlig lagring med SHA-256 hash
@@ -90,26 +90,32 @@ class CustodyManager:
             try:
                 is_valid = object_store.verify_integrity(ev.file_path, ev.sha256)
                 if is_valid:
-                    verified.append({
-                        "id": ev.id,
-                        "title": ev.title,
-                        "sha256": ev.sha256,
-                        "file_path": ev.file_path,
-                        "status": "VALID",
-                    })
+                    verified.append(
+                        {
+                            "id": ev.id,
+                            "title": ev.title,
+                            "sha256": ev.sha256,
+                            "file_path": ev.file_path,
+                            "status": "VALID",
+                        }
+                    )
                 else:
-                    tampered.append({
+                    tampered.append(
+                        {
+                            "id": ev.id,
+                            "title": ev.title,
+                            "expected_sha256": ev.sha256,
+                            "status": "HASH_MISMATCH",
+                        }
+                    )
+            except FileNotFoundError:
+                missing.append(
+                    {
                         "id": ev.id,
                         "title": ev.title,
-                        "expected_sha256": ev.sha256,
-                        "status": "HASH_MISMATCH",
-                    })
-            except FileNotFoundError:
-                missing.append({
-                    "id": ev.id,
-                    "title": ev.title,
-                    "status": "FILE_NOT_FOUND",
-                })
+                        "status": "FILE_NOT_FOUND",
+                    }
+                )
 
         all_ok = len(tampered) == 0 and len(missing) == 0
 

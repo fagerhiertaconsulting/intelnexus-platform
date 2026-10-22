@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Set
 import dns.resolver
 import httpx
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -17,6 +17,17 @@ class DnsWhoisTransform(BaseTransform):
     description = "Slår upp DNS-poster (A, AAAA, MX, TXT, NS) och hämtar domänregistreringsdata via RDAP."
     category = "network"
     supported_types: Set[EntityType] = {EntityType.DOMAIN}
+
+    @staticmethod
+    def normalize_domain(domain_str: str) -> str:
+        """Normaliserar domännamn genom att strippa protokoll, portar och avslutande punkter."""
+        d = domain_str.strip().lower()
+        if d.startswith("http://"):
+            d = d[7:]
+        elif d.startswith("https://"):
+            d = d[8:]
+        d = d.split("/")[0].split(":")[0]
+        return d.rstrip(".")
 
     async def execute(self, seed: Entity, options: Optional[Dict[str, Any]] = None) -> TransformResult:
         start_time = time.time()
@@ -38,6 +49,7 @@ class DnsWhoisTransform(BaseTransform):
 
         # 1. DNS Lookup (via dnspython med fallback till Cloudflare DoH)
         loop = asyncio.get_event_loop()
+
         def _resolve_dns():
             res = {}
             for rtype in ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]:
@@ -46,7 +58,7 @@ class DnsWhoisTransform(BaseTransform):
                     if rtype == "MX":
                         res[rtype] = [f"{r.preference} {r.exchange.to_text().rstrip('.')}" for r in answers]
                     else:
-                        res[rtype] = [r.to_text().strip('"').rstrip('.') for r in answers]
+                        res[rtype] = [r.to_text().strip('"').rstrip(".") for r in answers]
                 except Exception:
                     res[rtype] = []
             return res
@@ -63,7 +75,7 @@ class DnsWhoisTransform(BaseTransform):
                 async with httpx.AsyncClient(timeout=4.0) as client:
                     resp = await client.get(
                         f"https://cloudflare-dns.com/dns-query?name={domain_name}&type=A",
-                        headers={"Accept": "application/dns-json"}
+                        headers={"Accept": "application/dns-json"},
                     )
                     if resp.status_code == 200:
                         data = resp.json()
@@ -238,7 +250,9 @@ class DnsWhoisTransform(BaseTransform):
                 new_relationships.append(rel)
 
         exec_time = time.time() - start_time
-        logs.append(f"DNS/RDAP transform klar på {exec_time:.2f}s. Skapade {len(new_entities)} entiteter och {len(new_relationships)} relationer.")
+        logs.append(
+            f"DNS/RDAP transform klar på {exec_time:.2f}s. Skapade {len(new_entities)} entiteter och {len(new_relationships)} relationer."
+        )
 
         return TransformResult(
             transform_name=self.name,

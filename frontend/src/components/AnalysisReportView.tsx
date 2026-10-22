@@ -27,6 +27,8 @@ export default function AnalysisReportView({ caseId, onDataChanged }: AnalysisRe
   // Report state
   const [markdownReport, setMarkdownReport] = useState<string>("");
   const [loadingReport, setLoadingReport] = useState(false);
+  const [reportMode, setReportMode] = useState<"full" | "sanitized">("full");
+  const [reportLocale, setReportLocale] = useState<"sv" | "en" | "uk">("sv");
 
   // NER state
   const [nerText, setNerText] = useState("");
@@ -43,7 +45,7 @@ export default function AnalysisReportView({ caseId, onDataChanged }: AnalysisRe
   const loadReport = async () => {
     try {
       setLoadingReport(true);
-      const res = await fetch(api.getMarkdownReportUrl(caseId));
+      const res = await fetch(api.getMarkdownReportUrl(caseId, reportMode, reportLocale));
       if (res.ok) {
         const text = await res.text();
         setMarkdownReport(text);
@@ -72,7 +74,7 @@ export default function AnalysisReportView({ caseId, onDataChanged }: AnalysisRe
       if (activeTab === "report") loadReport();
       if (activeTab === "resolution") loadResolutionMatches();
     }
-  }, [caseId, activeTab]);
+  }, [caseId, activeTab, reportMode, reportLocale]);
 
   const handleRunNer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,12 +113,12 @@ export default function AnalysisReportView({ caseId, onDataChanged }: AnalysisRe
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `utredningsrapport_${caseId}.md`;
+    a.download = `utredningsrapport_${caseId}_${reportMode}_${reportLocale}.md`;
     a.click();
   };
 
   const openPrintableReport = () => {
-    window.open(api.getHtmlReportUrl(caseId), "_blank");
+    window.open(api.getHtmlReportUrl(caseId, reportMode, reportLocale), "_blank");
   };
 
   return (
@@ -159,14 +161,56 @@ export default function AnalysisReportView({ caseId, onDataChanged }: AnalysisRe
         {/* FLIK 1: Utredningsrapport */}
         {activeTab === "report" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-base font-bold text-slate-100">Automatiserad Utredningsrapport</h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Sammanställer automatiskt fallets hypotes, kartlagda noder, centralitetsmått, risker och beviskedja.
                 </p>
               </div>
-              <div className="flex gap-2">
+
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Exportläge (Full vs Sanitiserad) */}
+                <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-0.5 text-xs">
+                  <button
+                    onClick={() => setReportMode("full")}
+                    className={`px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                      reportMode === "full"
+                        ? "bg-sky-600 text-white"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Full Dossier
+                  </button>
+                  <button
+                    onClick={() => setReportMode("sanitized")}
+                    className={`px-2.5 py-1 rounded text-[11px] font-semibold transition ${
+                      reportMode === "sanitized"
+                        ? "bg-amber-600 text-white"
+                        : "text-slate-400 hover:text-slate-200"
+                    }`}
+                  >
+                    Sanitiserad (GDPR)
+                  </button>
+                </div>
+
+                {/* Språkval */}
+                <div className="flex items-center bg-slate-900 border border-slate-700 rounded-lg p-0.5 text-xs">
+                  {(["sv", "en", "uk"] as const).map((l) => (
+                    <button
+                      key={l}
+                      onClick={() => setReportLocale(l)}
+                      className={`px-2 py-1 rounded text-[10px] font-bold uppercase transition ${
+                        reportLocale === l
+                          ? "bg-slate-700 text-white"
+                          : "text-slate-400 hover:text-slate-200"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  ))}
+                </div>
+
                 <button
                   onClick={downloadMarkdown}
                   className="flex items-center gap-1.5 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition"

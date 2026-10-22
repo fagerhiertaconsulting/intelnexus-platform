@@ -28,7 +28,9 @@ class Relationship(BaseModel):
     source_id: str = Field(..., description="Källnodens entity-ID")
     target_id: str = Field(..., description="Målnodens entity-ID")
     relation_type: RelationshipType = Field(..., description="Typ av relation mellan noderna")
-    attributes: Dict[str, Any] = Field(default_factory=dict, description="Attribut för kanten (t.ex. datum, roll, belopp)")
+    attributes: Dict[str, Any] = Field(
+        default_factory=dict, description="Attribut för kanten (t.ex. datum, roll, belopp)"
+    )
     provenance: List[ProvenanceRecord] = Field(default_factory=list, description="Proveniens för relationen")
     confidence_score: float = Field(default=1.0, ge=0.0, le=1.0, description="Konfidenspoäng för relationen")
     case_id: Optional[str] = Field(None, description="Kopplat ärende")

@@ -1,9 +1,8 @@
 import time
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 import httpx
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -21,7 +20,10 @@ KNOWN_REGISTRY_DATA: Dict[str, Dict[str, Any]] = {
         "latitude": 59.3361,
         "longitude": 18.0658,
         "directors": ["Anders Lindqvist (VD)", "Sara Berg (Styrelseordförande)"],
-        "shareholders": [{"name": "Nordic Holding Group", "type": "organization", "share": 65}, {"name": "Anders Lindqvist", "type": "person", "share": 35}],
+        "shareholders": [
+            {"name": "Nordic Holding Group", "type": "organization", "share": 65},
+            {"name": "Anders Lindqvist", "type": "person", "share": 35},
+        ],
     },
     "global holding ltd": {
         "org_number": "GB-8923412",
@@ -45,8 +47,11 @@ KNOWN_REGISTRY_DATA: Dict[str, Dict[str, Any]] = {
         "latitude": 59.3375,
         "longitude": 18.0601,
         "directors": ["Johan Ekström (VD)", "Sara Berg (Ledamot)"],
-        "shareholders": [{"name": "Anders Lindqvist", "type": "person", "share": 50}, {"name": "Johan Ekström", "type": "person", "share": 50}],
-    }
+        "shareholders": [
+            {"name": "Anders Lindqvist", "type": "person", "share": 50},
+            {"name": "Johan Ekström", "type": "person", "share": 50},
+        ],
+    },
 }
 
 
@@ -77,7 +82,7 @@ class CompanyRegistryTransform(BaseTransform):
                 resp = await client.get(
                     "https://api.opencorporates.com/v1/companies/search",
                     params={"q": query_name, "per_page": 1},
-                    headers={"User-Agent": "OpenIntel-OSINT/1.0"}
+                    headers={"User-Agent": "OpenIntel-OSINT/1.0"},
                 )
                 if resp.status_code == 200:
                     data = resp.json()
@@ -107,7 +112,7 @@ class CompanyRegistryTransform(BaseTransform):
                 if key in query_lower or query_lower in key:
                     matched_key = key
                     break
-            
+
             if matched_key:
                 registry_info = dict(KNOWN_REGISTRY_DATA[matched_key])
                 registry_info["name"] = query_name
@@ -159,13 +164,15 @@ class CompanyRegistryTransform(BaseTransform):
         )
 
         # Uppdatera eller berika seed-entiteten med attribut
-        seed.attributes.update({
-            "org_number": registry_info.get("org_number"),
-            "jurisdiction": registry_info.get("jurisdiction"),
-            "status": registry_info.get("status"),
-            "founded": registry_info.get("founded"),
-            "industry": registry_info.get("industry"),
-        })
+        seed.attributes.update(
+            {
+                "org_number": registry_info.get("org_number"),
+                "jurisdiction": registry_info.get("jurisdiction"),
+                "status": registry_info.get("status"),
+                "founded": registry_info.get("founded"),
+                "industry": registry_info.get("industry"),
+            }
+        )
 
         # 4. Skapa Adress / Location-entitet
         if registry_info.get("address"):
@@ -182,19 +189,21 @@ class CompanyRegistryTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(loc_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=loc_entity.id,
-                relation_type=RelationshipType.LOCATED_AT,
-                attributes={"type": "registered_office"},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=loc_entity.id,
+                    relation_type=RelationshipType.LOCATED_AT,
+                    attributes={"type": "registered_office"},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         # 5. Styrelseledamöter / Directors
         for d in registry_info.get("directors", []):
             d_name = d.split("(")[0].strip() if "(" in d else d.strip()
-            role = d[d.find("(")+1:d.find(")")] if "(" in d and ")" in d else "Styrelseledamot"
+            role = d[d.find("(") + 1 : d.find(")")] if "(" in d and ")" in d else "Styrelseledamot"
             person_entity = Entity(
                 type=EntityType.PERSON,
                 name=d_name,
@@ -203,14 +212,16 @@ class CompanyRegistryTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(person_entity)
-            new_relationships.append(Relationship(
-                source_id=person_entity.id,
-                target_id=seed.id,
-                relation_type=RelationshipType.DIRECTOR_OF,
-                attributes={"role": role},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=person_entity.id,
+                    target_id=seed.id,
+                    relation_type=RelationshipType.DIRECTOR_OF,
+                    attributes={"role": role},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         # 6. Ägare / Shareholders
         for s in registry_info.get("shareholders", []):
@@ -225,17 +236,21 @@ class CompanyRegistryTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(shareholder_entity)
-            new_relationships.append(Relationship(
-                source_id=shareholder_entity.id,
-                target_id=seed.id,
-                relation_type=RelationshipType.OWNS,
-                attributes={"ownership_share_pct": share_pct},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=shareholder_entity.id,
+                    target_id=seed.id,
+                    relation_type=RelationshipType.OWNS,
+                    attributes={"ownership_share_pct": share_pct},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         exec_time = time.time() - start_time
-        logs.append(f"Bolagsregister-transform klar på {exec_time:.2f}s. Skapade {len(new_entities)} entiteter och {len(new_relationships)} relationer.")
+        logs.append(
+            f"Bolagsregister-transform klar på {exec_time:.2f}s. Skapade {len(new_entities)} entiteter och {len(new_relationships)} relationer."
+        )
 
         return TransformResult(
             transform_name=self.name,

@@ -1,7 +1,8 @@
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, Field
-from app.core.vault import credential_vault, SUPPORTED_API_SERVICES
+from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from app.core.vault import credential_vault
+from app.api.two_factor import require_elevated_session
 
 router = APIRouter(prefix="/vault", tags=["Credential Vault (BYOAK)"])
 
@@ -12,13 +13,13 @@ class StoreKeyRequest(BaseModel):
     label: Optional[str] = None
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(require_elevated_session)])
 def list_vault_keys():
     """Listar alla kända API-tjänster i valvet och deras krypteringsstatus."""
     return credential_vault.list_configured_keys()
 
 
-@router.post("")
+@router.post("", dependencies=[Depends(require_elevated_session)])
 def store_vault_key(req: StoreKeyRequest):
     """Sparar och krypterar en användardefinierad API-nyckel med AES-256-GCM."""
     if not req.key_name or not req.api_key.strip():
@@ -35,7 +36,7 @@ def store_vault_key(req: StoreKeyRequest):
     }
 
 
-@router.delete("/{key_name}")
+@router.delete("/{key_name}", dependencies=[Depends(require_elevated_session)])
 def delete_vault_key(key_name: str):
     """Tar bort en API-nyckel från valvet."""
     deleted = credential_vault.delete_key(key_name)
@@ -44,7 +45,7 @@ def delete_vault_key(key_name: str):
     return {"status": "success", "message": f"API-nyckeln '{key_name}' har raderats."}
 
 
-@router.post("/test/{key_name}")
+@router.post("/test/{key_name}", dependencies=[Depends(require_elevated_session)])
 def test_vault_key(key_name: str):
     """Verifierar att en API-nyckel kan dekrypteras korrekt och har giltigt format."""
     val = credential_vault.get_key(key_name)

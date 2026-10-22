@@ -1,0 +1,53 @@
+{
+  "app_title": "IntelNexus Platform",
+  "app_subtitle": "Neutral integration and intelligence fusion hub for external API providers with link analysis, chain of custody and reporting",
+  "nav": {
+    "role_dashboard": "Role Dashboard",
+    "graph": "Graph & Links",
+    "timeline": "Timeline",
+    "map": "Geoint Map",
+    "evidence": "Evidence & Hash Chain",
+    "analysis": "AI/NLP & Report",
+    "active_case": "Active Case",
+    "select_case": "Select Case...",
+    "manage_cases": "Manage Cases",
+    "opsec_policy": "OpSec Egress",
+    "credentials": "API Credentials",
+    "two_factor": "2FA Security",
+    "language": "Language"
+  },
+  "opsec": {
+    "label": "OpSec Network Egress",
+    "direct": "Direct (Clearnet)",
+    "residential": "Residential Proxy",
+    "tor": "Tor Strict (SOCKS5)",
+    "direct_desc": "Standard direct connection without proxy. High performance.",
+    "residential_desc": "Residential proxy rotation to prevent rate limiting.",
+    "tor_desc": "Full anonymity via Tor onion network with DNS-leak protection."
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "refresh": "Refresh",
+    "export": "Export",
+    "create": "Create",
+    "delete": "Delete",
+    "search": "Search",
+    "confirm": "Confirm",
+    "execute": "Execute",
+    "dry_run": "Estimate (Dry-Run)",
+    "elevate": "Elevate Security"
+  },
+  "status": {
+    "active": "Active",
+    "suspended": "Suspended",
+    "closed": "Closed",
+    "archived": "Archived",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "intact": "Intact",
+    "tampered": "Discrepancy"
+  }
+}

@@ -14,7 +14,7 @@ import io
 
 def test_roles_configuration():
     roles = role_manager.list_roles()
-    assert len(roles) == 7
+    assert len(roles) >= 7
     role_ids = [r.role_id for r in roles]
     assert "dating_safety" in role_ids
     assert "law_enforcement" in role_ids
@@ -23,6 +23,8 @@ def test_roles_configuration():
     assert "finance_aml" in role_ids
     assert "geopolitical" in role_ids
     assert "embassy" in role_ids
+    assert "cyber_threat_intelligence" in role_ids
+    assert "fact_checking_human_rights" in role_ids
 
 
 @pytest.mark.asyncio
@@ -32,7 +34,7 @@ async def test_catfish_transform():
         type=EntityType.PERSON,
         name="Elena Heart",
         attributes={"image_url": "https://example.com/model.jpg"},
-        case_id="catfish_test"
+        case_id="catfish_test",
     )
     res = await t.execute(seed)
     assert res.success is True
@@ -43,11 +45,7 @@ async def test_catfish_transform():
 @pytest.mark.asyncio
 async def test_ubo_unwrapper_transform():
     t = UboUnwrapperTransform()
-    seed = Entity(
-        type=EntityType.ORGANIZATION,
-        name="Nordic Tech AB",
-        case_id="ubo_test"
-    )
+    seed = Entity(type=EntityType.ORGANIZATION, name="Nordic Tech AB", case_id="ubo_test")
     res = await t.execute(seed)
     assert res.success is True
     assert len(res.entities) >= 3
@@ -63,7 +61,7 @@ async def test_geoint_crisis_transform():
         type=EntityType.LOCATION,
         name="Kyiv Kriszon",
         attributes={"latitude": 50.4501, "longitude": 30.5234},
-        case_id="geo_test"
+        case_id="geo_test",
     )
     res = await t.execute(seed)
     assert res.success is True

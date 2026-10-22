@@ -1,6 +1,6 @@
-# Bidrags- och Utvecklarguide: OpenIntel-OSINT
+# Bidrags- och Utvecklarguide: IntelNexus Platform
 
-Tack för att du vill bidra till OpenIntel-OSINT! Denna guide förklarar hur plattformen är uppbyggd och hur du bygger och registrerar nya datainsamlingstransforms.
+Tack för att du vill bidra till IntelNexus Platform! Denna guide förklarar hur plattformen är uppbyggd och hur du bygger och registrerar nya datainsamlingstransforms och plugins.
 
 ---
 
@@ -25,7 +25,7 @@ class MyCustomTransform(BaseTransform):
     name = "my_custom_transform"
     display_name = "My Custom OSINT Transform"
     description = "Hämtar information från en extern öppen källa."
-    category = "network" # 'network', 'corporate', 'social', 'compliance', etc.
+    category = "network"  # 'network', 'corporate', 'social', 'compliance', etc.
     supported_types: Set[EntityType] = {EntityType.DOMAIN}
 
     async def execute(self, seed: Entity, options: Optional[Dict[str, Any]] = None) -> TransformResult:
@@ -73,13 +73,15 @@ class MyCustomTransform(BaseTransform):
         )
         new_entities.append(new_node)
 
-        new_relationships.append(Relationship(
-            source_id=seed.id,
-            target_id=new_node.id,
-            relation_type=RelationshipType.RESOLVES_TO,
-            provenance=[prov],
-            case_id=seed.case_id,
-        ))
+        new_relationships.append(
+            Relationship(
+                source_id=seed.id,
+                target_id=new_node.id,
+                relation_type=RelationshipType.RESOLVES_TO,
+                provenance=[prov],
+                case_id=seed.case_id,
+            )
+        )
 
         exec_time = time.time() - start_time
         return TransformResult(
@@ -115,8 +117,16 @@ pytest backend/tests/test_transforms.py -v
 
 ---
 
-## 🛠️ Kodstandarder
+## 🛠️ Kodstandarder & Kvalitetssäkring
 * Använd Pydantic v2 för alla datamodeller.
 * Alla nätverksanrop ska vara asynkrona (`httpx.AsyncClient` eller `asyncio.to_thread`).
 * Respektera rate-limits och använd rimliga timeouts ($3-8$ sekunder).
 * Alla hämtade råsvar ska arkiveras som bevis (`object_store`) med automatisk SHA-256 hash.
+
+### 📋 CLA & Obligatorisk Automatiserad Verifiering
+Alla bidrag till projektet hanteras via Pull Requests mot `main`:
+1. **Contributor License Agreement (CLA):** Samtliga bidragsgivare måste bekräfta och kryssa i projektets CLA i [`.github/pull_request_template.md`](.github/pull_request_template.md). Detta intygar att koden licensieras under Apache License 2.0 samt att projektägaren (**Fagerhierta Consulting AB**) äger rätten att omlicensiera framtida versioner och kommersiella distributioner.
+2. **100 % Grön Verifiering:** Innan en PR skickas in **måste** det automatiserade verifieringsskriptet köras lokalt och passera med 100 % grönt resultat:
+   * **Windows:** `powershell -ExecutionPolicy Bypass -File .\verify_all.ps1`
+   * **Linux / macOS:** `./verify_all.sh`
+   Skriptet validerar Ruff lint, Ruff format, Mypy (0 typfel), Bandit SAST, pip-audit, frontend ESLint, TypeScript-kompilering samt hela testsviten i Pytest med krav på **minst 85 % testtäckning**. PR:er med misslyckade kontroller eller sänkt kodtäckning under 85 % kommer automatiskt att avvisas av CI/CD-pipelinen.

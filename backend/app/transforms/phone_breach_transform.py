@@ -5,16 +5,14 @@ from typing import Any, Dict, List, Optional, Set
 import httpx
 from app.core.vault import credential_vault
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
 
 
 # Kända virtuella VoIP / engångsnummerprefix och operatörer för burner-konton
-VOIP_CARRIERS = [
-    "Twilio", "TextNow", "Google Voice", "Skype", "Bandwidth.com", "Vonage", "Pinger", "Telnyx"
-]
+VOIP_CARRIERS = ["Twilio", "TextNow", "Google Voice", "Skype", "Bandwidth.com", "Vonage", "Pinger", "Telnyx"]
 
 KNOWN_BREACHED_DATA: Dict[str, List[str]] = {
     "target@example.com": ["LinkedIn 2021 Breach", "Canva 2019 Dump"],
@@ -31,6 +29,16 @@ class PhoneBreachCheckTransform(BaseTransform):
     supported_types: Set[EntityType] = {EntityType.PHONE, EntityType.EMAIL, EntityType.PERSON}
     required_credentials: List[str] = []  # Fungerar gratis med lokal databas, berikas om HIBP_API_KEY finns
 
+    @staticmethod
+    def normalize_phone(phone_str: str) -> str:
+        """Normaliserar telefonnummer till E.164-format."""
+        digits = re.sub(r"\D", "", phone_str.strip())
+        if digits.startswith("0") and len(digits) == 10:
+            return f"+46{digits[1:]}"
+        elif digits.startswith("46"):
+            return f"+{digits}"
+        return f"+{digits}" if not phone_str.strip().startswith("+") else f"+{digits}"
+
     async def execute(self, seed: Entity, options: Optional[Dict[str, Any]] = None) -> TransformResult:
         start_time = time.time()
         identifier = seed.name.strip()
@@ -40,7 +48,7 @@ class PhoneBreachCheckTransform(BaseTransform):
         new_relationships: List[Relationship] = []
         evidence_items: List[EvidenceItem] = []
 
-        is_phone = seed.type == EntityType.PHONE or re.match(r'^\+?[0-9\s\-()]{7,18}$', identifier)
+        is_phone = seed.type == EntityType.PHONE or re.match(r"^\+?[0-9\s\-()]{7,18}$", identifier)
         is_email = seed.type == EntityType.EMAIL or "@" in identifier
 
         carrier_info: Dict[str, Any] = {}
@@ -48,7 +56,7 @@ class PhoneBreachCheckTransform(BaseTransform):
 
         # 1. Telefonverifiering & VoIP-detektering
         if is_phone:
-            clean_digits = re.sub(r'\D', '', identifier)
+            clean_digits = re.sub(r"\D", "", identifier)
             country = "Sverige" if clean_digits.startswith("46") or clean_digits.startswith("07") else "Internationellt"
             is_voip = False
             carrier = "Telia Sverige AB (Mobil)"
@@ -81,7 +89,7 @@ class PhoneBreachCheckTransform(BaseTransform):
                     async with httpx.AsyncClient(timeout=4.0) as client:
                         resp = await client.get(
                             f"https://haveibeenpwned.com/api/v3/breachedaccount/{identifier}",
-                            headers={"hibp-api-key": hibp_key, "user-agent": "OpenIntel-OSINT"}
+                            headers={"hibp-api-key": hibp_key, "user-agent": "OpenIntel-OSINT"},
                         )
                         if resp.status_code == 200:
                             breaches_found = [b.get("Name", "Okänd läcka") for b in resp.json()]
@@ -130,12 +138,14 @@ class PhoneBreachCheckTransform(BaseTransform):
         )
 
         # Uppdatera seed-attribut
-        seed.attributes.update({
-            "is_voip": carrier_info.get("is_voip", False),
-            "carrier": carrier_info.get("carrier"),
-            "breach_count": len(breaches_found),
-            "breaches": breaches_found,
-        })
+        seed.attributes.update(
+            {
+                "is_voip": carrier_info.get("is_voip", False),
+                "carrier": carrier_info.get("carrier"),
+                "breach_count": len(breaches_found),
+                "breaches": breaches_found,
+            }
+        )
 
         # Skapa varningsnod om VoIP-nummer detekterades
         if carrier_info.get("is_voip") is True:
@@ -150,13 +160,15 @@ class PhoneBreachCheckTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(warning_node)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=warning_node.id,
-                relation_type=RelationshipType.ASSOCIATED_WITH,
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=warning_node.id,
+                    relation_type=RelationshipType.ASSOCIATED_WITH,
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         exec_time = time.time() - start_time
         return TransformResult(

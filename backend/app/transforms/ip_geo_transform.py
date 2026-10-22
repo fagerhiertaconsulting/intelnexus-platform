@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 import httpx
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -46,7 +46,9 @@ class IpGeoTransform(BaseTransform):
                     data = resp.json()
                     if data.get("status") == "success":
                         geo_data = data
-                        logs.append(f"Geolokalisering: {geo_data.get('city')}, {geo_data.get('country')} (Lat: {geo_data.get('lat')}, Lon: {geo_data.get('lon')})")
+                        logs.append(
+                            f"Geolokalisering: {geo_data.get('city')}, {geo_data.get('country')} (Lat: {geo_data.get('lat')}, Lon: {geo_data.get('lon')})"
+                        )
                     else:
                         logs.append(f"IP-API svarade: {data.get('message', 'Okänt fel')}")
         except Exception as e:
@@ -113,15 +115,17 @@ class IpGeoTransform(BaseTransform):
         )
 
         # Uppdatera seed-entitetens attribut
-        seed.attributes.update({
-            "country": geo_data.get("country"),
-            "city": geo_data.get("city"),
-            "latitude": geo_data.get("lat"),
-            "longitude": geo_data.get("lon"),
-            "isp": geo_data.get("isp"),
-            "asn": geo_data.get("as"),
-            "ptr": ptr_hostname,
-        })
+        seed.attributes.update(
+            {
+                "country": geo_data.get("country"),
+                "city": geo_data.get("city"),
+                "latitude": geo_data.get("lat"),
+                "longitude": geo_data.get("lon"),
+                "isp": geo_data.get("isp"),
+                "asn": geo_data.get("as"),
+                "ptr": ptr_hostname,
+            }
+        )
 
         # 4. Skapa Plats-entitet (Location)
         if geo_data.get("lat") is not None and geo_data.get("lon") is not None:
@@ -141,14 +145,16 @@ class IpGeoTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(loc_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=loc_entity.id,
-                relation_type=RelationshipType.LOCATED_AT,
-                attributes={"service": "geolocation"},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=loc_entity.id,
+                    relation_type=RelationshipType.LOCATED_AT,
+                    attributes={"service": "geolocation"},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         # 5. Skapa ISP/ASN-entitet (Organization)
         isp_name = geo_data.get("org") or geo_data.get("isp")
@@ -161,14 +167,16 @@ class IpGeoTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(org_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=org_entity.id,
-                relation_type=RelationshipType.ASSOCIATED_WITH,
-                attributes={"role": "hosting_provider", "asn": geo_data.get("as")},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=org_entity.id,
+                    relation_type=RelationshipType.ASSOCIATED_WITH,
+                    attributes={"role": "hosting_provider", "asn": geo_data.get("as")},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         # 6. Skapa PTR Domän-entitet om tillgänglig
         if ptr_hostname:
@@ -180,17 +188,21 @@ class IpGeoTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(domain_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=domain_entity.id,
-                relation_type=RelationshipType.RESOLVES_TO,
-                attributes={"record_type": "PTR"},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=domain_entity.id,
+                    relation_type=RelationshipType.RESOLVES_TO,
+                    attributes={"record_type": "PTR"},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         exec_time = time.time() - start_time
-        logs.append(f"IP Geo-transform klar på {exec_time:.2f}s. Skapade {len(new_entities)} entiteter och {len(new_relationships)} relationer.")
+        logs.append(
+            f"IP Geo-transform klar på {exec_time:.2f}s. Skapade {len(new_entities)} entiteter och {len(new_relationships)} relationer."
+        )
 
         return TransformResult(
             transform_name=self.name,

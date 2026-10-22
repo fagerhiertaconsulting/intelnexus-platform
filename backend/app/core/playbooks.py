@@ -1,4 +1,3 @@
-import time
 from typing import Any, Dict, List, Optional
 from app.db.database import db
 from app.models.entity import Entity, EntityType, ProvenanceRecord
@@ -10,6 +9,7 @@ class PlaybookOrchestrator:
     Orkestrerar rollspecifika sökguider (Playbooks).
     Kör kedjade transforms, sammanställer riskbedömningar och genererar färdiga resultat.
     """
+
     async def run_dating_verification(
         self,
         case_id: str,
@@ -31,42 +31,46 @@ class PlaybookOrchestrator:
         )
 
         # 1. Skapa eller hämta målperson
-        person_entity = db.save_entity(Entity(
-            case_id=case_id,
-            type=EntityType.PERSON,
-            name=name.strip(),
-            attributes={
-                "image_url": image_url,
-                "phone": phone,
-                "email": email,
-                "story": story,
-            },
-            provenance=[prov],
-        ))
+        person_entity = db.save_entity(
+            Entity(
+                case_id=case_id,
+                type=EntityType.PERSON,
+                name=name.strip(),
+                attributes={
+                    "image_url": image_url,
+                    "phone": phone,
+                    "email": email,
+                    "story": story,
+                },
+                provenance=[prov],
+            )
+        )
 
         sub_entities = []
 
         # 2. Om telefonnummer finns, skapa telefonnod
         phone_node = None
         if phone and phone.strip():
-            phone_node = db.save_entity(Entity(
-                case_id=case_id,
-                type=EntityType.PHONE,
-                name=phone.strip(),
-                provenance=[prov],
-            ))
+            phone_node = db.save_entity(
+                Entity(
+                    case_id=case_id,
+                    type=EntityType.PHONE,
+                    name=phone.strip(),
+                    provenance=[prov],
+                )
+            )
             sub_entities.append(phone_node)
 
         # 3. Kör Catfish Reverse Image Transform
-        catfish_res = await registry.execute_transform("catfish_reverse_image_transform", person_entity)
+        _catfish_res = await registry.execute_transform("catfish_reverse_image_transform", person_entity)
 
         # 4. Kör Phone & Breach Transform om nummer angavs
-        phone_res = None
+        _phone_res = None
         if phone_node:
-            phone_res = await registry.execute_transform("phone_breach_transform", phone_node)
+            _phone_res = await registry.execute_transform("phone_breach_transform", phone_node)
 
         # 5. Kör Romance Scam & Varningslistekontroll
-        scam_res = await registry.execute_transform("romance_scam_check_transform", person_entity)
+        _scam_res = await registry.execute_transform("romance_scam_check_transform", person_entity)
 
         # 6. Kör Social Footprint på namnet
         footprint_res = await registry.execute_transform("social_footprint_transform", person_entity)

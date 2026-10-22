@@ -4,7 +4,7 @@ from typing import Any, Dict, List, Optional, Set
 import httpx
 from app.core.vault import credential_vault
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -47,7 +47,7 @@ class GeointCrisisTransform(BaseTransform):
             try:
                 async with httpx.AsyncClient(timeout=4.0) as client:
                     resp = await client.get(
-                        f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{firms_key}/VIIRS_SNPP_NRT/{lat-0.5},{lon-0.5},{lat+0.5},{lon+0.5}/1"
+                        f"https://firms.modaps.eosdis.nasa.gov/api/area/csv/{firms_key}/VIIRS_SNPP_NRT/{lat - 0.5},{lon - 0.5},{lat + 0.5},{lon + 0.5}/1"
                     )
                     if resp.status_code == 200:
                         lines = resp.text.strip().split("\n")
@@ -59,29 +59,55 @@ class GeointCrisisTransform(BaseTransform):
         # Om ingen extern nyckel konfigurerats, generera verifierade hotspots i kriszonen
         if not thermal_hotspots:
             thermal_hotspots = [
-                {"lat": lat + 0.02, "lon": lon - 0.01, "brightness_k": 348.5, "satellite": "VIIRS NOAA-20", "confidence": "high"},
-                {"lat": lat - 0.03, "lon": lon + 0.02, "brightness_k": 362.1, "satellite": "MODIS Terra", "confidence": "high"},
+                {
+                    "lat": lat + 0.02,
+                    "lon": lon - 0.01,
+                    "brightness_k": 348.5,
+                    "satellite": "VIIRS NOAA-20",
+                    "confidence": "high",
+                },
+                {
+                    "lat": lat - 0.03,
+                    "lon": lon + 0.02,
+                    "brightness_k": 362.1,
+                    "satellite": "MODIS Terra",
+                    "confidence": "high",
+                },
             ]
             logs.append(f"Identifierade {len(thermal_hotspots)} termiska anomalier (NASA FIRMS satellitdata).")
 
         # 2. ADS-B Flygrörelser i närområdet (OpenSky Network)
         flight_transponders = [
-            {"callsign": "RECON91", "icao24": "4b821a", "altitude_m": 8500, "velocity_kmh": 680, "type": "Militärt spaningsflygplan"},
-            {"callsign": "FORTE12", "icao24": "ae5414", "altitude_m": 16200, "velocity_kmh": 610, "type": "RQ-4 Global Hawk UAV"},
+            {
+                "callsign": "RECON91",
+                "icao24": "4b821a",
+                "altitude_m": 8500,
+                "velocity_kmh": 680,
+                "type": "Militärt spaningsflygplan",
+            },
+            {
+                "callsign": "FORTE12",
+                "icao24": "ae5414",
+                "altitude_m": 16200,
+                "velocity_kmh": 610,
+                "type": "RQ-4 Global Hawk UAV",
+            },
         ]
         logs.append(f"Mottog transponderdata från {len(flight_transponders)} flygenheter i luftrummet.")
 
         # 3. Perimeterkontroll mot diplomatiska beskickningar
         perimeter_alerts: List[Dict[str, Any]] = []
         for fac in DIPLOMATIC_FACILITIES:
-            dist_deg = ((lat - fac["lat"])**2 + (lon - fac["lon"])**2)**0.5
+            dist_deg = ((lat - fac["lat"]) ** 2 + (lon - fac["lon"]) ** 2) ** 0.5
             dist_approx_km = dist_deg * 111.0  # Grov km-konvertering
             if dist_approx_km <= fac["radius_km"]:
-                perimeter_alerts.append({
-                    "facility": fac["name"],
-                    "distance_km": round(dist_approx_km, 1),
-                    "status": "VARNING: Aktivitet inom säkerhetsperimeter",
-                })
+                perimeter_alerts.append(
+                    {
+                        "facility": fac["name"],
+                        "distance_km": round(dist_approx_km, 1),
+                        "status": "VARNING: Aktivitet inom säkerhetsperimeter",
+                    }
+                )
                 logs.append(f"SÄKERHETSLARM: Aktivitet {round(dist_approx_km, 1)} km från {fac['name']}!")
 
         case_id = seed.case_id or "default_case"
@@ -136,14 +162,16 @@ class GeointCrisisTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(flight_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=flight_entity.id,
-                relation_type=RelationshipType.LOCATED_AT,
-                attributes={"status": "active_in_airspace"},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=flight_entity.id,
+                    relation_type=RelationshipType.LOCATED_AT,
+                    attributes={"status": "active_in_airspace"},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         # Skapa larmnod om perimeter träffades
         if perimeter_alerts:
@@ -160,13 +188,15 @@ class GeointCrisisTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(alert_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=alert_entity.id,
-                relation_type=RelationshipType.ASSOCIATED_WITH,
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=alert_entity.id,
+                    relation_type=RelationshipType.ASSOCIATED_WITH,
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         exec_time = time.time() - start_time
         return TransformResult(

@@ -10,6 +10,7 @@ class ObjectStore:
     Kryptografisk bevislagring med automatisk SHA-256 beräkning och integritetskontroll.
     Stödjer både lokal filsystems- och S3/MinIO-abstraktion.
     """
+
     def __init__(self, base_dir: Optional[Path] = None):
         self.base_dir = base_dir or settings.EVIDENCE_DIR
         self.base_dir.mkdir(parents=True, exist_ok=True)
@@ -26,13 +27,13 @@ class ObjectStore:
         """
         target_dir = self.base_dir / case_id / subfolder
         target_dir.mkdir(parents=True, exist_ok=True)
-        
+
         file_sha256 = self.calculate_sha256(data)
         file_path = target_dir / filename
-        
+
         with open(file_path, "wb") as f:
             f.write(data)
-            
+
         relative_path = str(file_path.relative_to(self.base_dir))
         return relative_path, file_sha256, len(data)
 

@@ -137,7 +137,7 @@ export default function FinanceUboView({ caseId }: FinanceUboViewProps) {
             </div>
           ) : (
             <div className="p-8 text-center text-xs text-slate-500">
-              Inga UBO-ägarkedjor upplösta ännu. Välj ett bolag i grafen och kör 'UBO Unwrapper & Beneficial Ownership'.
+              Inga UBO-ägarkedjor upplösta ännu. Välj ett bolag i grafen och kör &quot;UBO Unwrapper &amp; Beneficial Ownership&quot;.
             </div>
           )}
         </div>

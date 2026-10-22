@@ -8,8 +8,12 @@ from .analysis import router as analysis_router
 from .vault import router as vault_router
 from .roles import router as roles_router
 from .playbooks import router as playbooks_router
+from .two_factor import router as two_factor_router
+from .auth import router as auth_router
+from .plugins import router as plugins_router
 
 api_router = APIRouter(prefix="/api")
+api_router.include_router(auth_router)
 api_router.include_router(cases_router)
 api_router.include_router(entities_router)
 api_router.include_router(transforms_router)
@@ -19,5 +23,14 @@ api_router.include_router(analysis_router)
 api_router.include_router(vault_router)
 api_router.include_router(roles_router)
 api_router.include_router(playbooks_router)
+api_router.include_router(two_factor_router)
+api_router.include_router(plugins_router)
+
+# Stöd även /api/v1/... för endpoints specificerade med v1-prefix
+v1_router = APIRouter(prefix="/v1")
+v1_router.include_router(two_factor_router)
+v1_router.include_router(plugins_router)
+v1_router.include_router(transforms_router)
+api_router.include_router(v1_router)
 
 __all__ = ["api_router"]

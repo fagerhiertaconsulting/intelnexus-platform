@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 from fastapi import APIRouter, HTTPException
 from app.core.roles import role_manager, WorkspaceRoleConfig
 

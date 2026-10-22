@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -18,9 +18,7 @@ SCAM_KEYWORDS = [
     ("arv", "Påstått stort utländskt arv som behöver frigöras"),
 ]
 
-KNOWN_SCAM_NAMES = [
-    "alexander vance", "richard stone", "david carter", "dr. mark smith", "robert golden"
-]
+KNOWN_SCAM_NAMES = ["alexander vance", "richard stone", "david carter", "dr. mark smith", "robert golden"]
 
 
 class RomanceScamCheckTransform(BaseTransform):
@@ -116,16 +114,18 @@ class RomanceScamCheckTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(incident)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=incident.id,
-                relation_type=RelationshipType.ASSOCIATED_WITH,
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=incident.id,
+                    relation_type=RelationshipType.ASSOCIATED_WITH,
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         exec_time = time.time() - start_time
-        logs.append(f"Bedrägerikontroll klar: {verdict} ({risk_score*100:.0f}%)")
+        logs.append(f"Bedrägerikontroll klar: {verdict} ({risk_score * 100:.0f}%)")
 
         return TransformResult(
             transform_name=self.name,

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 import httpx
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -12,7 +12,9 @@ from .base import BaseTransform, TransformResult
 class CrtshSubdomainTransform(BaseTransform):
     name = "crtsh_subdomain_transform"
     display_name = "Certificate Transparency Subdomain Discovery"
-    description = "Söker igenom Certificate Transparency (CT)-loggar via crt.sh efter utställda certifikat och subdomäner."
+    description = (
+        "Söker igenom Certificate Transparency (CT)-loggar via crt.sh efter utställda certifikat och subdomäner."
+    )
     category = "network"
     supported_types: Set[EntityType] = {EntityType.DOMAIN}
 
@@ -107,14 +109,16 @@ class CrtshSubdomainTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(sub_entity)
-            new_relationships.append(Relationship(
-                source_id=sub_entity.id,
-                target_id=seed.id,
-                relation_type=RelationshipType.SUBDOMAIN_OF,
-                attributes={"domain": sub},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=sub_entity.id,
+                    target_id=seed.id,
+                    relation_type=RelationshipType.SUBDOMAIN_OF,
+                    attributes={"domain": sub},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
 
         exec_time = time.time() - start_time
         logs.append(f"Subdomän-transform klar på {exec_time:.2f}s. {len(new_entities)} subdomäner länkade.")

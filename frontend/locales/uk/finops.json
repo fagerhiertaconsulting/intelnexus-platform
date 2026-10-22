@@ -1,0 +1,24 @@
+{
+  "title": "FinOps та контроль витрат API",
+  "dry_run_modal_title": "Запуск трансформу та оцінка витрат",
+  "dry_run_modal_subtitle": "Оцінка лімітів запитів і вартості API в реальному часі перед запуском віддаленого збору",
+  "estimated_cost": "Орієнтовна вартість API",
+  "cost_usd": "${cost} USD",
+  "estimated_duration": "Орієнтовна тривалість",
+  "duration_seconds": "~{seconds} сек",
+  "tokens_required": "Необхідні токени",
+  "quota_status": "Статус квоти",
+  "quota_available": "Квота доступна",
+  "quota_exceeded": "Перевищено ліміт токенів (Token Bucket)",
+  "cached_result": "Результат кешовано (Без витрат API)",
+  "byoak_mode": "BYOAK (Оплачується ключем користувача)",
+  "free_tier": "Безкоштовний рівень",
+  "tokens_remaining": "Залишок токенів: {remaining}",
+  "rate_limit_info": "Швидкість поповнення: {rate} токенів/сек",
+  "confirm_execute": "Підтвердити та запустити трансформ",
+  "cancel": "Скасувати",
+  "warnings": {
+    "rate_limit_warning": "Попередження: Високе споживання токенів може призвести до тимчасових обмежень зовнішніх API.",
+    "insufficient_quota": "Недостатньо токенів для цієї операції. Будь ласка, зачекайте поповнення квоти."
+  }
+}

@@ -1,11 +1,10 @@
-from typing import Any, Dict, List, Optional
+from typing import Optional
 from fastapi import APIRouter, HTTPException, Response
 from pydantic import BaseModel
 from app.analysis.ner_extractor import ner_extractor
 from app.analysis.report_generator import report_generator
 from app.db.database import db
 from app.db.graph_store import graph_store
-from app.models.entity import Entity
 
 router = APIRouter(prefix="/analysis", tags=["AI & NLP Analysis"])
 
@@ -43,23 +42,23 @@ def extract_entities_from_text(req: ExtractTextRequest):
 
 
 @router.get("/report/{case_id}/markdown")
-def get_markdown_report(case_id: str):
-    """Genererar en fullständig utredningsrapport i Markdown-format."""
+def get_markdown_report(case_id: str, mode: str = "full", locale: str = "sv"):
+    """Genererar en utredningsrapport i Markdown-format (full eller sanitized, sv/en/uk)."""
     try:
-        content = report_generator.generate_markdown_report(case_id)
+        content = report_generator.generate_markdown_report(case_id, mode=mode, locale=locale)
         return Response(content=content, media_type="text/markdown; charset=utf-8")
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.get("/report/{case_id}/html")
-def get_html_report(case_id: str):
-    """Genererar en snyggt stylad, utskriftsklar HTML-rapport för ärendet."""
+def get_html_report(case_id: str, mode: str = "full", locale: str = "sv"):
+    """Genererar en stylad HTML-rapport för ärendet (full eller sanitized, sv/en/uk)."""
     try:
-        md_content = report_generator.generate_markdown_report(case_id)
+        md_content = report_generator.generate_markdown_report(case_id, mode=mode, locale=locale)
         # Enkel ren HTML-konvertering för utskrift
         html = f"""<!DOCTYPE html>
-<html lang="sv">
+<html lang="{locale}">
 <head>
     <meta charset="UTF-8">
     <title>Utredningsrapport - {case_id}</title>

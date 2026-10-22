@@ -1,9 +1,9 @@
-from typing import Any, Dict, List, Optional, Set, Tuple
+import hashlib
+from typing import List, Optional, Tuple
 from pydantic import BaseModel
 from app.db.database import db
 from app.db.graph_store import graph_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
-from app.models.relationship import Relationship
+from app.models.entity import Entity
 
 
 def jaro_winkler_distance(s1: str, s2: str, scaling: float = 0.1) -> float:
@@ -83,10 +83,118 @@ class EntityResolver:
     Stödjer deterministisk identifiering (org-nummer, unika nycklar) och
     probabilistisk matchning (Jaro-Winkler likhet på namn/alias).
     """
+
     UNIQUE_ATTR_KEYS = [
-        "org_number", "vat_number", "registration_number",
-        "email", "phone_number", "crypto_address", "sha256", "national_id"
+        "org_number",
+        "vat_number",
+        "registration_number",
+        "email",
+        "phone_number",
+        "crypto_address",
+        "sha256",
+        "national_id",
     ]
+
+    @staticmethod
+    def compute_canonical_key(entity: Entity) -> Optional[str]:
+        """
+        Beräknar universell unik identifierare enligt avsnitt 3.1:
+        - Person: national_id eller SHA256(full_name + date_of_birth)
+        - Organization: jurisdiction_code + ":" + registration_number (eller org_number)
+        - NetworkEntity (IP / Domain): ip-adress eller domännamn i gemener
+        - DigitalIdentity (Username / Social): platform + ":" + username
+        """
+        etype = entity.type.value if hasattr(entity.type, "value") else str(entity.type)
+        attrs = entity.attributes
+
+        # 1. Person
+        if etype in ("Person", "person"):
+            if "national_id" in attrs and attrs["national_id"]:
+                return f"person:nid:{str(attrs['national_id']).strip().lower()}"
+            dob = attrs.get("dob") or attrs.get("date_of_birth") or attrs.get("birth_date")
+            if dob:
+                raw = f"{entity.name.strip().lower()}_{str(dob).strip()}".encode("utf-8")
+                return f"person:hash:{hashlib.sha256(raw).hexdigest()}"
+
+        # 2. Organization / Company
+        if etype in ("Company", "Organization", "company", "organization"):
+            reg_num = attrs.get("registration_number") or attrs.get("org_number") or attrs.get("vat_number")
+            if reg_num:
+                jurisdiction = attrs.get("jurisdiction_code") or attrs.get("jurisdiction") or "SE"
+                return f"org:{str(jurisdiction).strip().upper()}:{str(reg_num).strip().lower()}"
+
+        # 3. NetworkEntity (Domain, IPAddress, IP)
+        if etype in ("ip", "domain", "Domain", "IPAddress", "ip_address", "network_entity"):
+            val = attrs.get("ip") or attrs.get("domain") or entity.name
+            return f"net:{str(val).strip().lower()}"
+
+        # 4. DigitalIdentity / Username
+        if etype in ("username", "Username", "digital_identity", "user_profile"):
+            platform = attrs.get("platform") or "web"
+            handle = attrs.get("username") or attrs.get("handle") or entity.name
+            return f"identity:{str(platform).strip().lower()}:{str(handle).strip().lower()}"
+
+        return None
+
+    def resolve_or_merge(self, case_id: str, new_entity: Entity) -> Tuple[Entity, bool]:
+        """
+        Söker efter befintlig entitet med matchande kanonisk nyckel eller unika attribut.
+        Om match hittas slås attribut och proveniens samman in i befintlig nod utan dubbletter.
+        Om ingen match hittas sparas den nya noden i databas och graf.
+        Returnerar (entity, was_created: bool).
+        """
+        existing_entities = db.list_entities(case_id=case_id)
+        new_key = self.compute_canonical_key(new_entity)
+
+        matched: Optional[Entity] = None
+
+        for existing in existing_entities:
+            # 1. Match på beräknad kanonisk nyckel
+            if new_key and self.compute_canonical_key(existing) == new_key:
+                matched = existing
+                break
+
+            # 2. Match på unika nycklar om samma typ
+            if existing.type == new_entity.type:
+                for attr_key in self.UNIQUE_ATTR_KEYS:
+                    val1 = new_entity.attributes.get(attr_key)
+                    val2 = existing.attributes.get(attr_key)
+                    if val1 and val2 and str(val1).strip().lower() == str(val2).strip().lower():
+                        matched = existing
+                        break
+            if matched:
+                break
+
+        if matched:
+            # Slå ihop attribut och proveniens in i matched
+            combined_aliases = set(matched.aliases)
+            combined_aliases.add(new_entity.name)
+            for a in new_entity.aliases:
+                combined_aliases.add(a)
+            combined_aliases.discard(matched.name)
+            matched.aliases = sorted(list(combined_aliases))
+
+            for k, v in new_entity.attributes.items():
+                if k not in matched.attributes:
+                    matched.attributes[k] = v
+                elif isinstance(matched.attributes[k], list) and isinstance(v, list):
+                    matched.attributes[k] = list(set(matched.attributes[k] + v))
+
+            existing_prov_hashes = {p.sha256 for p in matched.provenance}
+            for p in new_entity.provenance:
+                if p.sha256 not in existing_prov_hashes:
+                    matched.provenance.append(p)
+                    existing_prov_hashes.add(p.sha256)
+
+            matched.confidence_score = max(matched.confidence_score, new_entity.confidence_score)
+            db.save_entity(matched)
+            graph_store.reload_case_graph(case_id)
+            return matched, False
+
+        # Ingen dubblett hittades: spara ny entitet
+        db.save_entity(new_entity)
+        graph_store.add_entity_to_graph(case_id, new_entity)
+        return new_entity, True
 
     def find_matches(self, case_id: str, probabilistic_threshold: float = 0.85) -> List[MatchCandidate]:
         """
@@ -114,15 +222,17 @@ class EntityResolver:
                         det_reasons.append(f"Identiskt unikt attribut '{key}': {val1}")
 
                 if det_reasons:
-                    candidates.append(MatchCandidate(
-                        primary_entity_id=e1.id,
-                        secondary_entity_id=e2.id,
-                        primary_name=e1.name,
-                        secondary_name=e2.name,
-                        match_type="deterministic",
-                        confidence=1.0,
-                        reasons=det_reasons,
-                    ))
+                    candidates.append(
+                        MatchCandidate(
+                            primary_entity_id=e1.id,
+                            secondary_entity_id=e2.id,
+                            primary_name=e1.name,
+                            secondary_name=e2.name,
+                            match_type="deterministic",
+                            confidence=1.0,
+                            reasons=det_reasons,
+                        )
+                    )
                     continue
 
                 # 2. Probabilistisk matchning (Jaro-Winkler på namn och alias)
@@ -154,15 +264,17 @@ class EntityResolver:
                 final_confidence = min(1.0, best_sim + (shared_attrs * 0.05))
 
                 if final_confidence >= probabilistic_threshold:
-                    candidates.append(MatchCandidate(
-                        primary_entity_id=e1.id,
-                        secondary_entity_id=e2.id,
-                        primary_name=e1.name,
-                        secondary_name=e2.name,
-                        match_type="probabilistic",
-                        confidence=round(final_confidence, 3),
-                        reasons=prob_reasons,
-                    ))
+                    candidates.append(
+                        MatchCandidate(
+                            primary_entity_id=e1.id,
+                            secondary_entity_id=e2.id,
+                            primary_name=e1.name,
+                            secondary_name=e2.name,
+                            match_type="probabilistic",
+                            confidence=round(final_confidence, 3),
+                            reasons=prob_reasons,
+                        )
+                    )
 
         return candidates
 

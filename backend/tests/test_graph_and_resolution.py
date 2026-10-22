@@ -1,4 +1,3 @@
-import pytest
 from app.db.database import db
 from app.db.graph_store import graph_store
 from app.models.case import CaseCreateRequest
@@ -22,8 +21,12 @@ def test_graph_and_metrics():
     e2 = db.save_entity(Entity(case_id=cid, type=EntityType.ORGANIZATION, name="Corp A"))
     e3 = db.save_entity(Entity(case_id=cid, type=EntityType.DOMAIN, name="corp-a.com"))
 
-    db.save_relationship(Relationship(case_id=cid, source_id=e1.id, target_id=e2.id, relation_type=RelationshipType.DIRECTOR_OF))
-    db.save_relationship(Relationship(case_id=cid, source_id=e2.id, target_id=e3.id, relation_type=RelationshipType.OWNS))
+    db.save_relationship(
+        Relationship(case_id=cid, source_id=e1.id, target_id=e2.id, relation_type=RelationshipType.DIRECTOR_OF)
+    )
+    db.save_relationship(
+        Relationship(case_id=cid, source_id=e2.id, target_id=e3.id, relation_type=RelationshipType.OWNS)
+    )
 
     graph_store.reload_case_graph(cid)
     gdata = graph_store.get_graph_data(cid)
@@ -45,19 +48,23 @@ def test_entity_resolution_and_merge():
     case = db.create_case(CaseCreateRequest(title="Resolution Case"))
     cid = case.id
 
-    e1 = db.save_entity(Entity(
-        case_id=cid,
-        type=EntityType.PERSON,
-        name="Carl Gustafsson",
-        attributes={"national_id": "19800101-1234", "city": "Stockholm"}
-    ))
+    e1 = db.save_entity(
+        Entity(
+            case_id=cid,
+            type=EntityType.PERSON,
+            name="Carl Gustafsson",
+            attributes={"national_id": "19800101-1234", "city": "Stockholm"},
+        )
+    )
 
-    e2 = db.save_entity(Entity(
-        case_id=cid,
-        type=EntityType.PERSON,
-        name="Karl Gustafsson",
-        attributes={"national_id": "19800101-1234", "phone": "+4670112233"}
-    ))
+    e2 = db.save_entity(
+        Entity(
+            case_id=cid,
+            type=EntityType.PERSON,
+            name="Karl Gustafsson",
+            attributes={"national_id": "19800101-1234", "phone": "+4670112233"},
+        )
+    )
 
     # Hitta deterministisk matchning
     matches = entity_resolver.find_matches(cid)

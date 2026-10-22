@@ -252,7 +252,14 @@ export default function EvidenceView({ caseId }: EvidenceViewProps) {
                   {filtered.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-800/40 transition">
                       <td className="p-3 font-medium text-slate-200 max-w-xs truncate">
-                        {item.title}
+                        <div className="flex items-center gap-2">
+                          <span className="truncate">{item.title}</span>
+                          {item.admiralty_code && (
+                            <span className="text-[10px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-700/80 shadow-sm shrink-0">
+                              NATO: [{item.admiralty_code}]
+                            </span>
+                          )}
+                        </div>
                         {item.source_url && (
                           <div className="text-[10px] text-slate-500 truncate mt-0.5">
                             {item.source_url}
@@ -309,7 +316,14 @@ export default function EvidenceView({ caseId }: EvidenceViewProps) {
           <div className="bg-[#111827] border border-slate-700 w-full max-w-4xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
             <div className="flex justify-between items-start pb-4 border-b border-slate-800">
               <div>
-                <h3 className="font-bold text-slate-100 text-base">{viewingEvidence.title}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-slate-100 text-base">{viewingEvidence.title}</h3>
+                  {viewingEvidence.admiralty_code && (
+                    <span className="text-xs font-bold tracking-wider px-2 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-700/80 shadow-sm">
+                      NATO: [{viewingEvidence.admiralty_code}]
+                    </span>
+                  )}
+                </div>
                 <div className="text-[11px] text-slate-400 font-mono mt-1">
                   SHA-256: {viewingEvidence.sha256}
                 </div>

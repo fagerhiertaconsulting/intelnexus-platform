@@ -1,7 +1,7 @@
-# Säkerhetspolicy och Etiska Riktlinjer (OpenIntel-OSINT v2)
+# Säkerhetspolicy och Etiska Riktlinjer (IntelNexus Platform)
 
 ## 🛡️ Säkerhetspolicy
-OpenIntel-OSINT är utformad för defensiv säkerhetsanalys, brottsbekämpning, granskande journalistik och transparent verifiering.
+IntelNexus Platform är utformad som en neutral integrations- och fusionshubb för defensiv säkerhetsanalys, brottsbekämpning, granskande journalistik och transparent verifiering mot externa API-leverantörer.
 
 Om du upptäcker en säkerhetssårbarhet i plattformen, vänligen rapportera den ansvarsfullt till projektets underhållare via GitHub Security Advisories.
 

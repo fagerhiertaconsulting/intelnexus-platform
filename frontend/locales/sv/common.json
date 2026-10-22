@@ -1,0 +1,53 @@
+{
+  "app_title": "IntelNexus Platform",
+  "app_subtitle": "Neutral integrations- och fusionshubb för externa API-leverantörer med länkanalys, beviskedja och rapportgenerering",
+  "nav": {
+    "role_dashboard": "Rollöversikt",
+    "graph": "Graf & Länkar",
+    "timeline": "Tidslinje",
+    "map": "Geoint Karta",
+    "evidence": "Bevis & Hashkedja",
+    "analysis": "AI/NLP & Rapport",
+    "active_case": "Aktivt Ärende",
+    "select_case": "Välj ärende...",
+    "manage_cases": "Hantera Ärenden",
+    "opsec_policy": "OpSec Egress",
+    "credentials": "API-Nycklar",
+    "two_factor": "2FA Säkerhet",
+    "language": "Språk"
+  },
+  "opsec": {
+    "label": "OpSec Nätverkspolicy",
+    "direct": "Direkt (Clearnet)",
+    "residential": "Bostadsproxy",
+    "tor": "Tor Strikt (SOCKS5)",
+    "direct_desc": "Standard direktanslutning utan anonymisering. Hög prestanda.",
+    "residential_desc": "Roterande bostadsproxy för att motverka blockeringar.",
+    "tor_desc": "Fullständig anonymisering via Tor onion-nätverket med DNS-läckageskydd."
+  },
+  "buttons": {
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "close": "Stäng",
+    "refresh": "Uppdatera",
+    "export": "Exportera",
+    "create": "Skapa",
+    "delete": "Ta bort",
+    "search": "Sök",
+    "confirm": "Bekräfta",
+    "execute": "Kör",
+    "dry_run": "Estimera (Dry-Run)",
+    "elevate": "Höj behörighet"
+  },
+  "status": {
+    "active": "Aktiv",
+    "suspended": "Pausad",
+    "closed": "Avslutad",
+    "archived": "Arkiverad",
+    "loading": "Laddar...",
+    "error": "Fel",
+    "success": "Klart",
+    "intact": "Obruten",
+    "tampered": "Avvikelse funnen"
+  }
+}

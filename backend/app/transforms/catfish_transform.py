@@ -1,11 +1,8 @@
-import io
 import time
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
-from PIL import Image
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -30,7 +27,7 @@ KNOWN_CATFISH_PATTERNS: List[Dict[str, Any]] = [
         "stolen_alias": ["Markus Chen", "Sarah Jenkins"],
         "known_scams": ["Falsk identitet på LinkedIn / WhatsApp kontakt"],
         "risk_level": "HÖG",
-    }
+    },
 ]
 
 
@@ -128,13 +125,15 @@ class CatfishReverseImageTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(incident)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=incident.id,
-                relation_type=RelationshipType.ASSOCIATED_WITH,
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=incident.id,
+                    relation_type=RelationshipType.ASSOCIATED_WITH,
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
         else:
             logs.append("Inga matchningar mot kända sol-och-vår-databaser eller stockfoton.")
             seed.attributes["catfish_risk"] = "LÅG"

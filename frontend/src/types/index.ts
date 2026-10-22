@@ -27,6 +27,9 @@ export interface Entity {
   attributes: Record<string, any>;
   provenance: ProvenanceRecord[];
   confidence_score: number;
+  source_reliability?: string;
+  info_credibility?: string;
+  admiralty_code?: string;
   case_id?: string;
   created_at: string;
   updated_at: string;
@@ -50,6 +53,7 @@ export interface Case {
   description: string;
   status: "active" | "suspended" | "closed" | "archived";
   priority: "low" | "medium" | "high" | "critical";
+  egress_policy?: "DIRECT" | "PROXY_RESIDENTIAL" | "TOR_STRICT";
   tags: string[];
   investigator: string;
   created_at: string;
@@ -66,6 +70,9 @@ export interface EvidenceItem {
   sha256: string;
   source_url?: string;
   collector_plugin?: string;
+  source_reliability?: string;
+  info_credibility?: string;
+  admiralty_code?: string;
   metadata: Record<string, any>;
   recorded_at: string;
 }
@@ -79,6 +86,9 @@ export interface GraphNode {
     aliases: string[];
     confidence_score: number;
     attributes: Record<string, any>;
+    source_reliability?: string;
+    info_credibility?: string;
+    admiralty_code?: string;
     created_at?: string;
   };
 }
@@ -134,6 +144,23 @@ export interface TransformInfo {
   required_credentials?: string[];
   is_available?: boolean;
   is_byoak?: boolean;
+}
+
+export interface TransformDryRunEstimate {
+  transform_name: string;
+  target_id: string;
+  target_type: string;
+  estimated_cost_usd: number;
+  estimated_duration_seconds: number;
+  tokens_required: number;
+  quota_available: boolean;
+  will_use_cache: boolean;
+  required_credentials: string[];
+  is_byoak: boolean;
+  rate_limit_info: {
+    tokens_remaining: number;
+    refill_rate_per_sec: number;
+  };
 }
 
 export interface MatchCandidate {
@@ -203,3 +230,36 @@ export interface DatingVerificationResult {
   };
   profiles_found: number;
 }
+
+// --- 2FA & SECURITY TYPES ---
+
+export interface TwoFactorStatus {
+  user_id: string;
+  is_2fa_enabled: boolean;
+  totp_verified: boolean;
+  step_up_vault_required: boolean;
+  elevated_until: string | null;
+  is_elevated: boolean;
+  has_security_keys: boolean;
+  security_keys_count: number;
+  unused_backup_codes_count: number;
+}
+
+export interface SecurityKeyItem {
+  id: string;
+  user_id: string;
+  key_name: string;
+  credential_id: string;
+  sign_count: number;
+  transports: string[];
+  aaguid: string | null;
+  created_at: string;
+  last_used_at: string | null;
+}
+
+export interface TOTPGenerateData {
+  secret: string;
+  otpauth_uri: string;
+  qr_code_svg: string;
+}
+

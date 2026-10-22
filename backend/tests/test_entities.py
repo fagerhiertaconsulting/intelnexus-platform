@@ -1,7 +1,6 @@
-import pytest
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
-from app.models.case import Case, CaseStatus, CasePriority
+from app.models.case import Case
 from app.db.database import DatabaseManager
 
 
@@ -31,7 +30,7 @@ def test_relationship_creation():
 
 def test_database_crud(tmp_path):
     test_db = DatabaseManager(db_path=tmp_path / "test.db")
-    
+
     # Create Case
     case = test_db.create_case(Case(title="Test Case", description="Description"))
     assert case.id.startswith("case--")

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 from pydantic import BaseModel, Field
 from app.models.entity import Entity, EntityType, ProvenanceRecord
-from app.models.relationship import Relationship, RelationshipType
+from app.models.relationship import Relationship
 from app.models.evidence import EvidenceItem
 from app.core.vault import credential_vault, LocalCredentialVault
 
@@ -27,6 +27,7 @@ class BaseTransform(ABC):
     Stödjer BYOAK (Bring Your Own API Key) med automatisk avkänning av nödvändiga
     krypterade API-nycklar i det lokala valvet.
     """
+
     name: str = "base_transform"
     display_name: str = "Base Transform"
     description: str = "Baskonverterare"

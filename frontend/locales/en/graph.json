@@ -1,0 +1,62 @@
+{
+  "title": "Link Analysis & Knowledge Graph",
+  "search_placeholder": "Search node, IP, domain, hash...",
+  "filter_types": "Filter Entity Types",
+  "add_node": "Add Node",
+  "layout": "Layout",
+  "layouts": {
+    "cose": "Force-Directed (CoSE)",
+    "circle": "Circle",
+    "concentric": "Concentric Centrality",
+    "breadthfirst": "Hierarchical Tree",
+    "grid": "Grid"
+  },
+  "entity_types": {
+    "person": "Person",
+    "organization": "Organization",
+    "domain": "Domain",
+    "ip": "IP Address",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "username": "Username",
+    "crypto_wallet": "Crypto Wallet",
+    "location": "Location",
+    "document": "Document",
+    "incident": "Incident"
+  },
+  "nato_admiralty": {
+    "title": "NATO Admiralty System (A1-F6)",
+    "code_label": "Admiralty Rating",
+    "source_reliability": "Source Reliability (A-F)",
+    "info_credibility": "Information Credibility (1-6)",
+    "reliability": {
+      "A": "A - Completely reliable",
+      "B": "B - Usually reliable",
+      "C": "C - Fairly reliable",
+      "D": "D - Not usually reliable",
+      "E": "E - Unreliable",
+      "F": "F - Reliability cannot be judged"
+    },
+    "credibility": {
+      "1": "1 - Confirmed by other sources",
+      "2": "2 - Probably true",
+      "3": "3 - Possibly true",
+      "4": "4 - Doubtful",
+      "5": "5 - Improbable",
+      "6": "6 - Truth cannot be judged"
+    }
+  },
+  "inspector": {
+    "node_details": "Node Inspector",
+    "confidence": "Confidence",
+    "admiralty_badge": "NATO",
+    "sanctioned_alert": "Sanctions Flag Identified",
+    "run_transform": "Execute OSINT Transform",
+    "no_transforms": "No specific transforms available for this entity type.",
+    "known_aliases": "Known Aliases",
+    "attributes": "Attributes",
+    "no_attributes": "No attributes recorded",
+    "provenance": "Provenance & Verification Chain",
+    "delete_node": "Delete Node"
+  }
+}

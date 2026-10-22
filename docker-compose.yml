@@ -19,6 +19,7 @@ services:
       - MINIO_SECRET_KEY=openintel_minio_secret_key
       - MINIO_BUCKET=openintel-evidence
       - DATA_DIR=/data
+      - TOR_PROXY_URL=socks5://tor:9050
     volumes:
       - backend_data:/data
     depends_on:
@@ -111,6 +112,20 @@ services:
       - minio_data:/data
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  tor:
+    image: dperson/torproxy:latest
+    container_name: openintel-tor
+    restart: unless-stopped
+    ports:
+      - "9050:9050"
+    environment:
+      - TOR_NewCircuitPeriod=15
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 9050 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

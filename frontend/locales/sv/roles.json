@@ -1,0 +1,51 @@
+{
+  "title": "Utredarroller & Personas",
+  "subtitle": "Välj en specialanpassad arbetsprofil med skräddarsydda widgets, spelböcker och föreslagna API-nycklar",
+  "roles": {
+    "investigator": {
+      "name": "Allmän Utredare",
+      "description": "Allmän personkartläggning, telefon/e-post-pivoter och dejtingsäkerhet.",
+      "audience": "OSINT-utredare och privatspanare"
+    },
+    "analyst": {
+      "name": "Länkanalytiker & Grafer",
+      "description": "Djup entitetskartläggning, nätverksmått, PageRank-centralitet och relationsupptäckt.",
+      "audience": "Underrättelseanalytiker och nätverksforskare"
+    },
+    "compliance_officer": {
+      "name": "Efterlevnad & Sanktioner",
+      "description": "Granskning mot OFAC, EU, FN, PEP-listor och bolagstransparens.",
+      "audience": "Risk- och efterlevnadsansvariga (KYC/AML)"
+    },
+    "administrator": {
+      "name": "Systemadministratör",
+      "description": "Systemövervakning, API-kvoter, revisionsloggar och nyckelhantering.",
+      "audience": "Plattforms- och säkerhetsadministratörer"
+    },
+    "journalist_whistleblower": {
+      "name": "Granskande Journalist & Visselblåsare",
+      "description": "Maximal OpSec, metadatarensning, kryptografisk beviskedja och källskydd.",
+      "audience": "Grävande journalister, visselblåsare och NGO:er"
+    },
+    "law_enforcement_prosecutor": {
+      "name": "Polis & Åklagare",
+      "description": "Rättslig bevisstandard, obruten beviskedja (Chain of Custody) och domstolsrapporter.",
+      "audience": "Polisutredare, cyberbrottsenheter och åklagare"
+    },
+    "corporate_fraud_investigator": {
+      "name": "Bolags- & Finansutredare",
+      "description": "Verkliga huvudmän (UBO), skalbolagskedjor och finansiell forensik.",
+      "audience": "Ekobrottsutredare, forensiska revisorer och bolagsjurister"
+    },
+    "cyber_threat_intelligence": {
+      "name": "Cyber Threat Intelligence (CTI)",
+      "description": "Hotaktörers infrastruktur, Shodan/VirusTotal-pivoter, IoC-grafer och skadlig kod-analys.",
+      "audience": "Hotforskare, SOC nivå 3-analytiker och incident responders"
+    },
+    "fact_checking_human_rights": {
+      "name": "Mänskliga Rättigheter & Faktagranskning",
+      "description": "Bellingcat-modell för verifiering, GEOINT i konfliktzoner, bevaring av öppet bevis och krigsbrottsutredning.",
+      "audience": "Människorättsutredare, faktagranskare och OSINT-verifierare"
+    }
+  }
+}

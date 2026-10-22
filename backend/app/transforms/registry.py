@@ -24,6 +24,7 @@ class TransformRegistry:
     Centralt register och exekveringsmotor för alla OSINT-transforms.
     Hanterar upptäckt, BYOAK-nyckelavkänning, asynkron parallellkörning, databassynk och evidensarkivering.
     """
+
     def __init__(self):
         self._transforms: Dict[str, BaseTransform] = {}
         self._register_default_transforms()
@@ -58,16 +59,18 @@ class TransformRegistry:
         result = []
         for t in self._transforms.values():
             is_unlocked = t.is_available(credential_vault)
-            result.append({
-                "name": t.name,
-                "display_name": t.display_name,
-                "description": t.description,
-                "category": t.category,
-                "supported_types": [s.value if hasattr(s, "value") else str(s) for s in t.supported_types],
-                "required_credentials": t.required_credentials,
-                "is_available": is_unlocked,
-                "is_byoak": len(t.required_credentials) > 0,
-            })
+            result.append(
+                {
+                    "name": t.name,
+                    "display_name": t.display_name,
+                    "description": t.description,
+                    "category": t.category,
+                    "supported_types": [s.value if hasattr(s, "value") else str(s) for s in t.supported_types],
+                    "required_credentials": t.required_credentials,
+                    "is_available": is_unlocked,
+                    "is_byoak": len(t.required_credentials) > 0,
+                }
+            )
         return result
 
     def get_supported_transforms_for_entity(self, entity: Entity) -> List[Dict[str, Any]]:
@@ -75,17 +78,21 @@ class TransformRegistry:
         available = []
         for t in self._transforms.values():
             if entity.type in t.supported_types:
-                available.append({
-                    "name": t.name,
-                    "display_name": t.display_name,
-                    "description": t.description,
-                    "category": t.category,
-                    "required_credentials": t.required_credentials,
-                    "is_available": t.is_available(credential_vault),
-                })
+                available.append(
+                    {
+                        "name": t.name,
+                        "display_name": t.display_name,
+                        "description": t.description,
+                        "category": t.category,
+                        "required_credentials": t.required_credentials,
+                        "is_available": t.is_available(credential_vault),
+                    }
+                )
         return available
 
-    async def execute_transform(self, transform_name: str, seed: Entity, options: Optional[Dict[str, Any]] = None) -> TransformResult:
+    async def execute_transform(
+        self, transform_name: str, seed: Entity, options: Optional[Dict[str, Any]] = None
+    ) -> TransformResult:
         """
         Kör en specifik transform mot en nod, sparar alla genererade noder/relationer/bevis
         i databasen och grafen samt synkroniserar grafstrukturen.
@@ -132,7 +139,9 @@ class TransformRegistry:
 
         return result
 
-    async def execute_parallel(self, transform_names: List[str], seed: Entity, options: Optional[Dict[str, Any]] = None) -> List[TransformResult]:
+    async def execute_parallel(
+        self, transform_names: List[str], seed: Entity, options: Optional[Dict[str, Any]] = None
+    ) -> List[TransformResult]:
         """Kör flera transforms parallellt mot samma seed-nod."""
         tasks = [self.execute_transform(name, seed, options) for name in transform_names]
         return await asyncio.gather(*tasks)

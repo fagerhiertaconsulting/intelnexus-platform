@@ -1,0 +1,62 @@
+{
+  "title": "Länkanalys & Kunskapsgraf",
+  "search_placeholder": "Sök nod, IP, domän, hash...",
+  "filter_types": "Filtrera entitetstyper",
+  "add_node": "Lägg till nod",
+  "layout": "Layout",
+  "layouts": {
+    "cose": "Kraftstyrd (CoSE)",
+    "circle": "Cirkel",
+    "concentric": "Koncentrisk centralitet",
+    "breadthfirst": "Hierarkiskt träd",
+    "grid": "Rutnät"
+  },
+  "entity_types": {
+    "person": "Person",
+    "organization": "Organisation / Företag",
+    "domain": "Domän",
+    "ip": "IP-adress",
+    "email": "E-postadress",
+    "phone": "Telefonnummer",
+    "username": "Användarnamn",
+    "crypto_wallet": "Kryptoplånbok",
+    "location": "Plats",
+    "document": "Dokument",
+    "incident": "Händelse"
+  },
+  "nato_admiralty": {
+    "title": "NATO Admiralty System (A1-F6)",
+    "code_label": "Admiralty-betyg",
+    "source_reliability": "Källans tillförlitlighet (A-F)",
+    "info_credibility": "Informationens trovärdighet (1-6)",
+    "reliability": {
+      "A": "A - Helt tillförlitlig",
+      "B": "B - Oftast tillförlitlig",
+      "C": "C - Ganska tillförlitlig",
+      "D": "D - Inte vanligen tillförlitlig",
+      "E": "E - Otillförlitlig",
+      "F": "F - Tillförlitlighet kan inte bedömas"
+    },
+    "credibility": {
+      "1": "1 - Bekräftad från andra källor",
+      "2": "2 - Sannolikt sann",
+      "3": "3 - Möjligen sann",
+      "4": "4 - Tveksam",
+      "5": "5 - Osannolik",
+      "6": "6 - Sanningshalt kan inte bedömas"
+    }
+  },
+  "inspector": {
+    "node_details": "Noddetaljer",
+    "confidence": "Konfidens",
+    "admiralty_badge": "NATO",
+    "sanctioned_alert": "Sanktionsflagg Identifierad",
+    "run_transform": "Kör OSINT-Transform",
+    "no_transforms": "Inga specifika transforms tillgängliga för denna nodtyp.",
+    "known_aliases": "Kända Alias",
+    "attributes": "Attribut",
+    "no_attributes": "Inga attribut registrerade",
+    "provenance": "Proviniens & Bevisursprung",
+    "delete_node": "Ta bort nod"
+  }
+}

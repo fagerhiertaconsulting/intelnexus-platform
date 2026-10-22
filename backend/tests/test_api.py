@@ -1,4 +1,3 @@
-import pytest
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -12,16 +11,14 @@ def test_health_and_root():
 
     r_resp = client.get("/")
     assert r_resp.status_code == 200
-    assert "OpenIntel-OSINT" in r_resp.json()["app"]
+    assert "IntelNexus Platform" in r_resp.json()["app"]
 
 
 def test_cases_api():
-    create_res = client.post("/api/cases", json={
-        "title": "API Test Case",
-        "description": "API Test Desc",
-        "priority": "high",
-        "tags": ["test", "api"]
-    })
+    create_res = client.post(
+        "/api/cases",
+        json={"title": "API Test Case", "description": "API Test Desc", "priority": "high", "tags": ["test", "api"]},
+    )
     assert create_res.status_code == 200
     case_data = create_res.json()
     case_id = case_data["id"]
@@ -46,11 +43,14 @@ def test_ner_and_report_api():
     Betalningar skedde till BTC: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq.
     """
 
-    ner_res = client.post("/api/analysis/ner", json={
-        "case_id": case_id,
-        "text": sample_text,
-        "auto_commit_to_case": True,
-    })
+    ner_res = client.post(
+        "/api/analysis/ner",
+        json={
+            "case_id": case_id,
+            "text": sample_text,
+            "auto_commit_to_case": True,
+        },
+    )
     assert ner_res.status_code == 200
     assert ner_res.json()["extracted_count"] >= 3
 

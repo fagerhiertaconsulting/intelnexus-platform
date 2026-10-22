@@ -23,6 +23,8 @@ wheels/
 venv/
 ENV/
 .pytest_cache/
+.coverage
+coverage.json
 
 # Node & Next.js
 frontend/node_modules/

@@ -1,5 +1,4 @@
 import base64
-import json
 import os
 import sqlite3
 import threading
@@ -113,6 +112,7 @@ class LocalCredentialVault:
     Krypterar alla hemligheter i vila med AES-256-GCM.
     Härleder krypteringsnyckeln från användarens lokala masterlösenord.
     """
+
     def __init__(self, db_path: Optional[Path] = None):
         self.db_path = db_path or (settings.DATA_DIR / "openintel.db")
         self._lock = threading.RLock()
@@ -167,14 +167,17 @@ class LocalCredentialVault:
         with self._lock:
             conn = sqlite3.connect(str(self.db_path))
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO credential_vault (key_name, service, label, encrypted_value, nonce, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(key_name) DO UPDATE SET
                     encrypted_value=excluded.encrypted_value,
                     nonce=excluded.nonce,
                     updated_at=excluded.updated_at
-            """, (key_name, service_title, display_label, encrypted_b64, nonce_b64, now, now))
+            """,
+                (key_name, service_title, display_label, encrypted_b64, nonce_b64, now, now),
+            )
             conn.commit()
             conn.close()
 
@@ -201,6 +204,8 @@ class LocalCredentialVault:
             except Exception:
                 return None
 
+    get_credential = get_key
+
     def has_key(self, key_name: str) -> bool:
         """Kontrollerar om en giltig API-nyckel finns konfigurerad i valvet."""
         val = self.get_key(key_name)
@@ -223,7 +228,9 @@ class LocalCredentialVault:
             conn = sqlite3.connect(str(self.db_path))
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
-            cursor.execute("SELECT key_name, service, label, created_at, updated_at FROM credential_vault ORDER BY service ASC")
+            cursor.execute(
+                "SELECT key_name, service, label, created_at, updated_at FROM credential_vault ORDER BY service ASC"
+            )
             rows = cursor.fetchall()
             conn.close()
 
@@ -249,24 +256,28 @@ class LocalCredentialVault:
             result = []
             for k, meta in SUPPORTED_API_SERVICES.items():
                 if k in configured:
-                    result.append({
-                        **configured[k],
-                        "domain": meta["domain"],
-                        "description": meta["description"],
-                        "requires_paid": meta["requires_paid"],
-                    })
+                    result.append(
+                        {
+                            **configured[k],
+                            "domain": meta["domain"],
+                            "description": meta["description"],
+                            "requires_paid": meta["requires_paid"],
+                        }
+                    )
                 else:
-                    result.append({
-                        "key_name": k,
-                        "service": meta["service"],
-                        "label": meta["label"],
-                        "domain": meta["domain"],
-                        "description": meta["description"],
-                        "requires_paid": meta["requires_paid"],
-                        "is_configured": False,
-                        "masked_value": None,
-                        "updated_at": None,
-                    })
+                    result.append(
+                        {
+                            "key_name": k,
+                            "service": meta["service"],
+                            "label": meta["label"],
+                            "domain": meta["domain"],
+                            "description": meta["description"],
+                            "requires_paid": meta["requires_paid"],
+                            "is_configured": False,
+                            "masked_value": None,
+                            "updated_at": None,
+                        }
+                    )
 
             return result
 

@@ -15,6 +15,11 @@ import JournalismVault from "@/components/JournalismVault";
 import FinanceUboView from "@/components/FinanceUboView";
 import GeointView from "@/components/GeointView";
 import CredentialVaultModal from "@/components/CredentialVaultModal";
+import { TwoFactorSettingsModal } from "@/components/TwoFactorSettingsModal";
+import { StepUpModal } from "@/components/StepUpModal";
+import { TwoFactorStatus } from "@/types";
+import "@/lib/i18n";
+import { useTranslation } from "react-i18next";
 import {
   Network,
   Clock,
@@ -24,15 +29,18 @@ import {
   FolderOpen,
   ChevronDown,
   ShieldAlert,
+  ShieldCheck,
   Download,
   Key,
   Sparkles,
   LayoutDashboard,
+  Globe,
 } from "lucide-react";
 
 type ActiveTab = "role_dashboard" | "graph" | "timeline" | "map" | "evidence" | "analysis";
 
 export default function Home() {
+  const { t, i18n } = useTranslation(["common", "roles", "auth"]);
   const [cases, setCases] = useState<Case[]>([]);
   const [activeCaseId, setActiveCaseId] = useState<string>("");
   const [roles, setRoles] = useState<WorkspaceRole[]>([]);
@@ -41,7 +49,11 @@ export default function Home() {
   const [stats, setStats] = useState<any>(null);
   const [showCaseModal, setShowCaseModal] = useState(false);
   const [showVaultModal, setShowVaultModal] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [showStepUpModal, setShowStepUpModal] = useState(false);
+  const [twoFactorStatus, setTwoFactorStatus] = useState<TwoFactorStatus | null>(null);
   const [loading, setLoading] = useState(true);
+
 
   const loadData = async () => {
     try {
@@ -73,9 +85,29 @@ export default function Home() {
     }
   };
 
+  const load2FAStatus = async () => {
+    try {
+      const st = await api.get2FAStatus();
+      setTwoFactorStatus(st);
+    } catch (err) {
+      console.error("Kunde inte hämta 2FA-status:", err);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    load2FAStatus();
+
+    const handleStepUpRequired = () => {
+      setShowStepUpModal(true);
+    };
+
+    window.addEventListener("openintel:require-step-up", handleStepUpRequired);
+    return () => {
+      window.removeEventListener("openintel:require-step-up", handleStepUpRequired);
+    };
   }, []);
+
 
   useEffect(() => {
     if (activeCaseId) {
@@ -84,6 +116,7 @@ export default function Home() {
   }, [activeCaseId]);
 
   const activeCase = cases.find((c) => c.id === activeCaseId);
+  const egressPolicy = activeCase?.egress_policy || "DIRECT";
   const activeRole = roles.find((r) => r.role_id === activeRoleId) || roles[0];
 
   const handleRoleChange = (newRoleId: string) => {
@@ -109,12 +142,12 @@ export default function Home() {
             </div>
             <div>
               <div className="font-bold text-sm tracking-wide text-slate-100 flex items-center gap-1.5">
-                OpenIntel<span className="text-sky-400">OSINT</span>
+                IntelNexus<span className="text-sky-400">Platform</span>
                 <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
-                  v2.0
+                  v3.0
                 </span>
               </div>
-              <div className="text-[10px] text-slate-400">Adaptiv Utredningsmiljö</div>
+              <div className="text-[10px] text-slate-400">Integrations- & Fusionshubb</div>
             </div>
           </div>
 
@@ -137,7 +170,7 @@ export default function Home() {
             <FolderOpen className="w-4 h-4 text-sky-400 shrink-0" />
             <div className="text-left truncate">
               <div className="text-xs font-semibold text-slate-200 truncate group-hover:text-white">
-                {activeCase?.title || "Välj ärende..."}
+                {activeCase?.title || t("common:nav.select_case")}
               </div>
               <div className="text-[10px] text-slate-400 font-mono">
                 {activeCase?.priority ? `Prio: ${activeCase.priority.toUpperCase()}` : ""}
@@ -145,6 +178,53 @@ export default function Home() {
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-slate-500 shrink-0 ml-1" />
           </button>
+
+          {/* OpSec Egress Statusindikator */}
+          <div
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold shadow-sm transition"
+            title={
+              egressPolicy === "TOR_STRICT"
+                ? t("common:opsec.tor_desc")
+                : egressPolicy === "PROXY_RESIDENTIAL"
+                ? t("common:opsec.residential_desc")
+                : t("common:opsec.direct_desc")
+            }
+            style={{
+              backgroundColor:
+                egressPolicy === "TOR_STRICT"
+                  ? "rgba(88, 28, 135, 0.35)"
+                  : egressPolicy === "PROXY_RESIDENTIAL"
+                  ? "rgba(30, 58, 138, 0.35)"
+                  : "rgba(15, 23, 42, 0.65)",
+              borderColor:
+                egressPolicy === "TOR_STRICT"
+                  ? "rgba(168, 85, 247, 0.6)"
+                  : egressPolicy === "PROXY_RESIDENTIAL"
+                  ? "rgba(59, 130, 246, 0.6)"
+                  : "rgba(71, 85, 105, 0.6)",
+              color:
+                egressPolicy === "TOR_STRICT"
+                  ? "#d8b4fe"
+                  : egressPolicy === "PROXY_RESIDENTIAL"
+                  ? "#93c5fd"
+                  : "#94a3b8",
+            }}
+          >
+            <span
+              className="w-2 h-2 rounded-full animate-pulse"
+              style={{
+                backgroundColor:
+                  egressPolicy === "TOR_STRICT"
+                    ? "#c084fc"
+                    : egressPolicy === "PROXY_RESIDENTIAL"
+                    ? "#38bdf8"
+                    : "#34d399",
+              }}
+            />
+            <span className="text-[10px] font-mono tracking-wider">
+              OPSEC: {egressPolicy}
+            </span>
+          </div>
         </div>
 
         {/* Mitten: Modul- & Vyväljare */}
@@ -158,7 +238,7 @@ export default function Home() {
             }`}
           >
             <LayoutDashboard className="w-3.5 h-3.5 text-sky-300" />
-            {activeRole?.display_name?.split(":")[0] || "Rolldashboard"}
+            {activeRole?.display_name?.split(":")[0] || t("common:nav.role_dashboard")}
           </button>
 
           <button
@@ -170,7 +250,7 @@ export default function Home() {
             }`}
           >
             <Network className="w-3.5 h-3.5" />
-            Grafduk
+            {t("common:nav.graph")}
           </button>
 
           <button
@@ -182,7 +262,7 @@ export default function Home() {
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            Tidslinje
+            {t("common:nav.timeline")}
           </button>
 
           <button
@@ -194,7 +274,7 @@ export default function Home() {
             }`}
           >
             <MapPin className="w-3.5 h-3.5" />
-            Kartvy
+            {t("common:nav.map")}
           </button>
 
           <button
@@ -206,7 +286,7 @@ export default function Home() {
             }`}
           >
             <Lock className="w-3.5 h-3.5" />
-            Beviskedja
+            {t("common:nav.evidence")}
           </button>
 
           <button
@@ -218,20 +298,52 @@ export default function Home() {
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            Rapport & NLP
+            {t("common:nav.analysis")}
           </button>
         </div>
 
-        {/* Höger: Valv (BYOAK), Statistik & Export */}
-        <div className="flex items-center gap-3">
+        {/* Höger: Valv (BYOAK), 2FA Säkerhet, Språkväljare, Statistik & Export */}
+        <div className="flex items-center gap-2.5">
+          {/* Språkväljare: EN, SV, UK */}
+          <div className="flex items-center bg-slate-900/90 border border-slate-700/80 rounded-xl p-0.5 text-xs font-semibold shadow-sm">
+            <Globe className="w-3.5 h-3.5 text-slate-400 ml-1.5 mr-1" />
+            {(["en", "sv", "uk"] as const).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => i18n.changeLanguage(lang)}
+                className={`px-2 py-1 rounded-lg transition uppercase text-[10px] font-bold ${
+                  i18n.language === lang
+                    ? "bg-sky-600 text-white shadow-sm"
+                    : "text-slate-400 hover:text-slate-200"
+                }`}
+              >
+                {lang}
+              </button>
+            ))}
+          </div>
+
+          {/* Frivillig 2FA Säkerhetsknapp */}
+          <button
+            onClick={() => setShow2FAModal(true)}
+            className="flex items-center gap-1.5 text-xs bg-slate-900/80 hover:bg-slate-800 text-slate-200 font-semibold px-3 py-1.5 rounded-xl border border-slate-700/80 hover:border-sky-500/50 transition shadow-sm"
+            title="Konfigurera frivillig tvåfaktorsautentisering (FIDO2/WebAuthn & TOTP)"
+          >
+            <ShieldCheck className={`w-3.5 h-3.5 ${twoFactorStatus?.is_2fa_enabled ? "text-emerald-400" : "text-slate-400"}`} />
+            <span>{t("common:nav.two_factor")}</span>
+            {twoFactorStatus?.is_2fa_enabled && (
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            )}
+          </button>
+
           {/* BYOAK Valv-knapp */}
           <button
             onClick={() => setShowVaultModal(true)}
             className="flex items-center gap-1.5 text-xs bg-amber-950/40 hover:bg-amber-900/50 text-amber-300 font-semibold px-3 py-1.5 rounded-xl border border-amber-700/60 transition shadow-sm"
           >
             <Key className="w-3.5 h-3.5 text-amber-400" />
-            API-Valv (BYOAK)
+            {t("common:nav.credentials")}
           </button>
+
 
           {stats && (
             <div className="hidden xl:flex items-center gap-2 text-xs">
@@ -265,7 +377,7 @@ export default function Home() {
       <main className="flex-1 w-full h-[calc(100vh-68px)] relative">
         {loading ? (
           <div className="flex items-center justify-center h-full text-slate-400 text-sm">
-            Initierar OpenIntel utredningsmiljö...
+            Initierar IntelNexus utredningsmiljö...
           </div>
         ) : !activeCaseId ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-3">
@@ -343,6 +455,27 @@ export default function Home() {
         <CredentialVaultModal
           onClose={() => setShowVaultModal(false)}
           onKeysChanged={() => loadStats(activeCaseId)}
+        />
+      )}
+
+      {/* Frivillig 2FA Säkerhets-modal */}
+      {show2FAModal && (
+        <TwoFactorSettingsModal
+          isOpen={show2FAModal}
+          onClose={() => setShow2FAModal(false)}
+          onStatusChanged={() => load2FAStatus()}
+        />
+      )}
+
+      {/* Global Step-Up modal */}
+      {showStepUpModal && (
+        <StepUpModal
+          isOpen={showStepUpModal}
+          onClose={() => setShowStepUpModal(false)}
+          onSuccess={() => {
+            load2FAStatus();
+            if (activeCaseId) loadStats(activeCaseId);
+          }}
         />
       )}
     </div>

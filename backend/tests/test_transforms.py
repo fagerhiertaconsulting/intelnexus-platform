@@ -1,11 +1,8 @@
 import pytest
 from app.models.entity import Entity, EntityType
 from app.transforms.registry import registry
-from app.transforms.dns_transform import DnsWhoisTransform
 from app.transforms.company_registry_transform import CompanyRegistryTransform
-from app.transforms.social_footprint_transform import SocialFootprintTransform
 from app.transforms.ip_geo_transform import IpGeoTransform
-from app.transforms.crtsh_subdomain_transform import CrtshSubdomainTransform
 from app.transforms.sanctions_transform import SanctionsTransform
 from app.transforms.exif_metadata_transform import ExifMetadataTransform
 
@@ -72,7 +69,7 @@ async def test_exif_metadata_transform():
         type=EntityType.DOCUMENT,
         name="suspect_photo.jpg",
         attributes={"latitude": 59.3293, "longitude": 18.0686, "camera_make": "Apple", "camera_model": "iPhone 15"},
-        case_id="test_case"
+        case_id="test_case",
     )
     res = await t.execute(seed)
     assert res.success is True

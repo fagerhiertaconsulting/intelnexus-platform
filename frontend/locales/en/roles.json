@@ -1,0 +1,51 @@
+{
+  "title": "Investigator Roles & Personas",
+  "subtitle": "Select a specialized workspace profile with role-tailored widgets, playbooks, and suggested API credentials",
+  "roles": {
+    "investigator": {
+      "name": "General Investigator",
+      "description": "General OSINT profiling, phone/email pivot analysis, and romance scam verification.",
+      "audience": "Open-source investigators and analysts"
+    },
+    "analyst": {
+      "name": "Link & Graph Analyst",
+      "description": "Deep entity mapping, network metrics, PageRank centrality, and relationship discovery.",
+      "audience": "Intelligence and network analysts"
+    },
+    "compliance_officer": {
+      "name": "Compliance & Sanctions Officer",
+      "description": "Screening against OFAC, EU, UN, PEP lists, and corporate transparency databases.",
+      "audience": "Compliance and risk officers"
+    },
+    "administrator": {
+      "name": "System Administrator",
+      "description": "System health, API rate limits, audit logs, and credential vault administration.",
+      "audience": "Security and platform administrators"
+    },
+    "journalist_whistleblower": {
+      "name": "Investigative Journalist & Whistleblower",
+      "description": "Maximum OpSec, metadata stripping, cryptographic chain of custody, and source protection.",
+      "audience": "Investigative reporters, whistleblowers, and NGOs"
+    },
+    "law_enforcement_prosecutor": {
+      "name": "Law Enforcement & Prosecutor",
+      "description": "Evidentiary standard documentation, chain of custody compliance, and judicial reporting.",
+      "audience": "Police investigators, cybercrime units, and prosecutors"
+    },
+    "corporate_fraud_investigator": {
+      "name": "Corporate Fraud & Forensic Investigator",
+      "description": "Ultimate Beneficial Ownership (UBO), shell company tracing, and financial forensics.",
+      "audience": "Forensic accountants, fraud auditors, and legal counsel"
+    },
+    "cyber_threat_intelligence": {
+      "name": "Cyber Threat Intelligence (CTI)",
+      "description": "Threat actor infrastructure, Shodan/VirusTotal pivots, malware IoC graphs, and sandbox analysis.",
+      "audience": "Threat researchers, SOC tier-3 analysts, and incident responders"
+    },
+    "fact_checking_human_rights": {
+      "name": "Human Rights & Fact-Checking",
+      "description": "Bellingcat verification model, conflict zone geoint, open-source evidence preservation, and war crime tracking.",
+      "audience": "Human rights researchers, fact-checkers, and OSINT verifiers"
+    }
+  }
+}

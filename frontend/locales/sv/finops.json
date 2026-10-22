@@ -1,0 +1,24 @@
+{
+  "title": "FinOps & API-kostnadskontroll",
+  "dry_run_modal_title": "Transformkörning & Kostnadsestimering",
+  "dry_run_modal_subtitle": "Realtidsuppskattning av API-kvoter och kostnader innan extern datainsamling startas",
+  "estimated_cost": "Beräknad API-kostnad",
+  "cost_usd": "${cost} USD",
+  "estimated_duration": "Beräknad tidsåtgång",
+  "duration_seconds": "~{seconds} sek",
+  "tokens_required": "Erforderliga tokens",
+  "quota_status": "Kvotstatus",
+  "quota_available": "Kvot tillgänglig",
+  "quota_exceeded": "Kvot överskriden (Token Bucket)",
+  "cached_result": "Resultat cachat (Ingen API-kostnad)",
+  "byoak_mode": "BYOAK (Betalas via utredarens nyckelvalv)",
+  "free_tier": "Gratis / Community-nivå",
+  "tokens_remaining": "Tokens kvar: {remaining}",
+  "rate_limit_info": "Påfyllnadstakt: {rate} tokens/sek",
+  "confirm_execute": "Bekräfta & Kör Transform",
+  "cancel": "Avbryt",
+  "warnings": {
+    "rate_limit_warning": "Varning: Hög tokenförbrukning kan utlösa tillfälliga begränsningar hos externa API:er.",
+    "insufficient_quota": "Otillräckligt med tokens i hinken för denna körning. Vänta tills kvoten har återfyllts."
+  }
+}

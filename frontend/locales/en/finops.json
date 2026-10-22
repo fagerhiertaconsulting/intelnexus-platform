@@ -1,0 +1,24 @@
+{
+  "title": "FinOps & API Cost Control",
+  "dry_run_modal_title": "Transform Execution & Cost Estimation",
+  "dry_run_modal_subtitle": "Real-time rate-limiting and cost estimation before triggering remote transforms",
+  "estimated_cost": "Estimated API Cost",
+  "cost_usd": "${cost} USD",
+  "estimated_duration": "Estimated Duration",
+  "duration_seconds": "~{seconds} sec",
+  "tokens_required": "Tokens Required",
+  "quota_status": "Quota Status",
+  "quota_available": "Quota Available",
+  "quota_exceeded": "Token Bucket Limit Exceeded",
+  "cached_result": "Result Cached (Zero API Cost)",
+  "byoak_mode": "BYOAK (Paid by User Vault Key)",
+  "free_tier": "Free / Community Tier",
+  "tokens_remaining": "Tokens Remaining: {remaining}",
+  "rate_limit_info": "Refill Rate: {rate} tokens/sec",
+  "confirm_execute": "Confirm & Run Transform",
+  "cancel": "Cancel",
+  "warnings": {
+    "rate_limit_warning": "Warning: High token consumption may trigger temporary rate limiting on third-party APIs.",
+    "insufficient_quota": "Insufficient tokens in the bucket for this operation. Please wait for the token refill."
+  }
+}

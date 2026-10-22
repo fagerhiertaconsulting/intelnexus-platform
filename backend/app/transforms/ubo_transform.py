@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -17,26 +17,34 @@ UBO_REGISTRY_TREES: Dict[str, Dict[str, Any]] = {
         ],
         "holdings": {
             "Nordic Holding Group AB": [
-                {"name": "Baltic Apex Investments Ltd", "type": "organization", "share": 0.80, "jurisdiction": "CY"}, # Cypern
+                {
+                    "name": "Baltic Apex Investments Ltd",
+                    "type": "organization",
+                    "share": 0.80,
+                    "jurisdiction": "CY",
+                },  # Cypern
                 {"name": "Anders Lindqvist", "type": "person", "share": 0.20, "jurisdiction": "SE"},
             ],
             "Baltic Apex Investments Ltd": [
                 {"name": "Elena Rostova", "type": "person", "share": 0.70, "jurisdiction": "RU"},
-                {"name": "Orion Nominee Trust BVI", "type": "organization", "share": 0.30, "jurisdiction": "VG"}, # Brittiska Jungfruöarna
-            ]
-        }
+                {
+                    "name": "Orion Nominee Trust BVI",
+                    "type": "organization",
+                    "share": 0.30,
+                    "jurisdiction": "VG",
+                },  # Brittiska Jungfruöarna
+            ],
+        },
     },
     "global holding ltd": {
-        "direct_owners": [
-            {"name": "Apex Trust Ltd", "type": "organization", "share": 1.00, "jurisdiction": "GB"}
-        ],
+        "direct_owners": [{"name": "Apex Trust Ltd", "type": "organization", "share": 1.00, "jurisdiction": "GB"}],
         "holdings": {
             "Apex Trust Ltd": [
                 {"name": "Marcus Vance", "type": "person", "share": 0.51, "jurisdiction": "GB"},
                 {"name": "Elena Rostova", "type": "person", "share": 0.49, "jurisdiction": "RU"},
             ]
-        }
-    }
+        },
+    },
 }
 
 
@@ -73,10 +81,20 @@ class UboUnwrapperTransform(BaseTransform):
                 ],
                 "holdings": {
                     f"{company_name} Holding AB": [
-                        {"name": "Verklig Huvudman Majoritetsägare", "type": "person", "share": 0.80, "jurisdiction": "SE"},
-                        {"name": "Global Trust Investments (BVI)", "type": "organization", "share": 0.20, "jurisdiction": "VG"},
+                        {
+                            "name": "Verklig Huvudman Majoritetsägare",
+                            "type": "person",
+                            "share": 0.80,
+                            "jurisdiction": "SE",
+                        },
+                        {
+                            "name": "Global Trust Investments (BVI)",
+                            "type": "organization",
+                            "share": 0.20,
+                            "jurisdiction": "VG",
+                        },
                     ]
-                }
+                },
             }
 
         case_id = seed.case_id or "default_case"
@@ -116,7 +134,9 @@ class UboUnwrapperTransform(BaseTransform):
         )
 
         # Rekursiv upplösning
-        def unwrap_owners(current_node_id: str, owners_list: List[Dict[str, Any]], multiplier: float = 1.0, depth: int = 1):
+        def unwrap_owners(
+            current_node_id: str, owners_list: List[Dict[str, Any]], multiplier: float = 1.0, depth: int = 1
+        ):
             for owner in owners_list:
                 o_name = owner["name"]
                 o_type = EntityType.ORGANIZATION if owner["type"] == "organization" else EntityType.PERSON
@@ -143,21 +163,25 @@ class UboUnwrapperTransform(BaseTransform):
                 new_entities.append(owner_entity)
 
                 # Koppla relation
-                new_relationships.append(Relationship(
-                    source_id=owner_entity.id,
-                    target_id=current_node_id,
-                    relation_type=RelationshipType.OWNS,
-                    attributes={
-                        "direct_share_pct": round(share * 100, 1),
-                        "effective_share_pct": round(effective_share * 100, 2),
-                        "is_ultimate_beneficial_owner": is_ubo,
-                    },
-                    provenance=[prov],
-                    case_id=seed.case_id,
-                ))
+                new_relationships.append(
+                    Relationship(
+                        source_id=owner_entity.id,
+                        target_id=current_node_id,
+                        relation_type=RelationshipType.OWNS,
+                        attributes={
+                            "direct_share_pct": round(share * 100, 1),
+                            "effective_share_pct": round(effective_share * 100, 2),
+                            "is_ultimate_beneficial_owner": is_ubo,
+                        },
+                        provenance=[prov],
+                        case_id=seed.case_id,
+                    )
+                )
 
                 if is_ubo:
-                    logs.append(f"Identifierade verklig huvudman (UBO): {o_name} ({round(effective_share * 100, 1)}% indirekt ägande)")
+                    logs.append(
+                        f"Identifierade verklig huvudman (UBO): {o_name} ({round(effective_share * 100, 1)}% indirekt ägande)"
+                    )
                 if is_offshore:
                     logs.append(f"Offshore-jurisdiktion upptäckt: {o_name} ({jurisdiction})")
 

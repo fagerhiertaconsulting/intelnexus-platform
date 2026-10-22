@@ -2,7 +2,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 from app.db.object_store import object_store
-from app.models.entity import Entity, EntityType, ProvenanceRecord
+from app.models.entity import Entity, EntityType
 from app.models.relationship import Relationship, RelationshipType
 from app.models.evidence import EvidenceItem
 from .base import BaseTransform, TransformResult
@@ -49,7 +49,7 @@ KNOWN_SANCTIONS: List[Dict[str, Any]] = [
         "program": "EU-SANCTIONS-UKR-2022",
         "listing_date": "2022-03-15",
         "details": "Designated for supporting actions undermining the territorial integrity of Ukraine.",
-    }
+    },
 ]
 
 
@@ -89,7 +89,9 @@ class SanctionsTransform(BaseTransform):
             for alias in entry.get("aliases", []):
                 alias_sim = _similarity(target_name, alias)
                 if alias_sim >= 0.8:
-                    matches.append({"match_type": "alias_match", "matched_alias": alias, "similarity": alias_sim, **entry})
+                    matches.append(
+                        {"match_type": "alias_match", "matched_alias": alias, "similarity": alias_sim, **entry}
+                    )
                     break
 
         case_id = seed.case_id or "default_case"
@@ -132,7 +134,7 @@ class SanctionsTransform(BaseTransform):
         if matches:
             top_match = matches[0]
             logs.append(f"VARNING: Träff på sanktionslista! ({top_match['authority']} - {top_match['program']})")
-            
+
             # Berika seed-entiteten med sanktionsflaggor
             seed.attributes["sanctioned"] = True
             seed.attributes["sanctions_authority"] = top_match["authority"]
@@ -154,14 +156,16 @@ class SanctionsTransform(BaseTransform):
                 case_id=seed.case_id,
             )
             new_entities.append(incident_entity)
-            new_relationships.append(Relationship(
-                source_id=seed.id,
-                target_id=incident_entity.id,
-                relation_type=RelationshipType.ASSOCIATED_WITH,
-                attributes={"status": "sanctioned", "severity": "CRITICAL"},
-                provenance=[prov],
-                case_id=seed.case_id,
-            ))
+            new_relationships.append(
+                Relationship(
+                    source_id=seed.id,
+                    target_id=incident_entity.id,
+                    relation_type=RelationshipType.ASSOCIATED_WITH,
+                    attributes={"status": "sanctioned", "severity": "CRITICAL"},
+                    provenance=[prov],
+                    case_id=seed.case_id,
+                )
+            )
         else:
             logs.append("Inga matchningar på internationella sanktionslistor funna.")
             seed.attributes["sanctioned"] = False

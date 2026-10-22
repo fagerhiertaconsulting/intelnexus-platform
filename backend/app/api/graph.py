@@ -1,5 +1,4 @@
-from typing import Any, Dict, List, Optional
-from fastapi import APIRouter, HTTPException, Query, Response
+from fastapi import APIRouter, Query, Response
 from app.db.graph_store import graph_store
 
 router = APIRouter(prefix="/graph", tags=["Graph & Link Analysis"])
@@ -39,7 +38,7 @@ def export_gexf(case_id: str):
     return Response(
         content=gexf_content,
         media_type="application/xml",
-        headers={"Content-Disposition": f'attachment; filename="case_{case_id}.gexf"'}
+        headers={"Content-Disposition": f'attachment; filename="case_{case_id}.gexf"'},
     )
 
 
@@ -50,7 +49,7 @@ def export_graphml(case_id: str):
     return Response(
         content=graphml_content,
         media_type="application/xml",
-        headers={"Content-Disposition": f'attachment; filename="case_{case_id}.graphml"'}
+        headers={"Content-Disposition": f'attachment; filename="case_{case_id}.graphml"'},
     )
 
 
