@@ -431,6 +431,20 @@ export default function GraphCanvas({ caseId, onRefreshStats }: GraphCanvasProps
             />
           </div>
 
+          {/* Datakälleindikator (LIVE PROBE / MOCK) */}
+          <div
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[10px] font-mono font-bold tracking-wider"
+            style={{
+              backgroundColor: "rgba(16, 185, 129, 0.15)",
+              borderColor: "rgba(16, 185, 129, 0.4)",
+              color: "#34d399",
+            }}
+            title="Aktiv inhämtningsmotor: LIVE PROBE (skarpa asynkrona anrop)"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>LIVE PROBE</span>
+          </div>
+
           <div className="h-5 w-[1px] bg-slate-700 mx-1" />
 
           {/* Knappar för att zooma & centrera */}

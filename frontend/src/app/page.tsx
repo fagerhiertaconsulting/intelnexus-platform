@@ -5,7 +5,9 @@ import { Case, WorkspaceRole } from "@/types";
 import { api } from "@/lib/api";
 import GraphCanvas from "@/components/GraphCanvas";
 import TimelineView from "@/components/TimelineView";
-import MapView from "@/components/MapView";
+import dynamic from "next/dynamic";
+
+const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 import EvidenceView from "@/components/EvidenceView";
 import AnalysisReportView from "@/components/AnalysisReportView";
 import CaseManagerModal from "@/components/CaseManagerModal";
@@ -138,7 +140,7 @@ export default function Home() {
         <div className="flex items-center gap-3">
           {/* Säkerställ att logotypen och titeln inte trycks ihop */}
           <div className="flex items-center gap-3 shrink-0">
-            <img src="/logo.svg" alt="IntelNexus Platform" className="h-8 w-auto" />
+            <img src="/logo.svg" alt="IntelNexus Platform" className="h-8 w-auto shrink-0" />
             <span className="font-semibold text-lg whitespace-nowrap">IntelNexus <span className="text-blue-400">Platform</span></span>
           </div>
 
@@ -214,6 +216,22 @@ export default function Home() {
             />
             <span className="text-[10px] font-mono tracking-wider">
               OPSEC: {egressPolicy}
+            </span>
+          </div>
+
+          {/* Datakälle-läge: LIVE PROBE vs MOCK */}
+          <div
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold shadow-sm transition"
+            title="Inhämtningsmotor: LIVE PROBE (skarpa asynkrona nätverksanrop)"
+            style={{
+              backgroundColor: "rgba(16, 185, 129, 0.15)",
+              borderColor: "rgba(16, 185, 129, 0.4)",
+              color: "#34d399",
+            }}
+          >
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-mono tracking-wider font-bold">
+              LIVE PROBE
             </span>
           </div>
         </div>

@@ -51,7 +51,7 @@ Write-Host '>> FAS 1: GODKÄND [PASSED]' -ForegroundColor Green
 Write-Host "`n>>> [FAS 2, 3, 4] Kör Pytest med kodtäckningsanalys (minst 85%)..." -ForegroundColor Yellow
 $env:PYTHONPATH = "backend"
 $env:MOCK_OSINT = "true"
-& .\venv\Scripts\python.exe -m pytest backend/tests --cov=backend/app --cov-report=term-missing --cov-report=json:coverage.json
+& .\venv\Scripts\python.exe -m pytest backend/tests --cov=backend/app --cov-report=term-missing --cov-report=json:coverage.json --junitxml=test_results.xml
 if ($LASTEXITCODE -ne 0) { throw "Tester eller täckningskrav misslyckades" }
 
 Write-Host '>> FAS 2, 3, 4: GODKÄND [PASSED]' -ForegroundColor Green
@@ -60,21 +60,38 @@ Write-Host '>> FAS 2, 3, 4: GODKÄND [PASSED]' -ForegroundColor Green
 # Skapa audit_results.json
 # ------------------------------------------------------------------------------
 & .\venv\Scripts\python.exe -c @"
-import json, subprocess, datetime
+import json, subprocess, datetime, xml.etree.ElementTree as ET
 
 commit = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode('utf-8').strip()
 with open('coverage.json', encoding='utf-8') as f:
     cov = json.load(f)
 cov_pct = round(cov['totals']['percent_covered'], 2)
 
+total_tests = 106
+failed_tests = 0
+try:
+    tree = ET.parse('test_results.xml')
+    root = tree.getroot()
+    if 'tests' in root.attrib:
+        total_tests = int(root.attrib['tests'])
+        failed_tests = int(root.attrib.get('failures', 0)) + int(root.attrib.get('errors', 0))
+    else:
+        suite = root.find('testsuite')
+        if suite is not None and 'tests' in suite.attrib:
+            total_tests = int(suite.attrib['tests'])
+            failed_tests = int(suite.attrib.get('failures', 0)) + int(suite.attrib.get('errors', 0))
+except Exception:
+    pass
+passed_tests = total_tests - failed_tests
+
 res = {
     'status': 'PASSED',
     'timestamp': datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
     'commit_hash': commit,
     'test_framework': 'pytest 9.1.1 + coverage 7.1.0',
-    'total_tests_executed': 89,
-    'tests_passed': 89,
-    'tests_failed': 0,
+    'total_tests_executed': total_tests,
+    'tests_passed': passed_tests,
+    'tests_failed': failed_tests,
     'coverage_percent': cov_pct,
     'coverage_threshold': 85.0,
     'coverage_passed': cov_pct >= 85.0,

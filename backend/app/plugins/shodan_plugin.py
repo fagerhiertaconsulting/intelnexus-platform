@@ -1,9 +1,17 @@
 from typing import List, Optional
-from .base import BaseOSINTPlugin, EntityInput, EntityOutput, RelationOutput, TransformResult
+import httpx
+from .base import BaseOSINTPlugin, EntityOutput, PluginCategory, PluginResult, RelationOutput
 
 
 class ShodanPlugin(BaseOSINTPlugin):
+    plugin_id = "shodan_host_intel"
     name = "Shodan Host & Port Intelligence"
+    category = PluginCategory.CTI
+    nato_admiralty = "B2"
+    requires_api_key = True
+    cost_per_query_usd = 1.0
+    supported_entity_types: List[str] = ["ip", "ipaddress", "IPAddress", "IP"]
+
     slug = "shodan_host_intel"
     description = "Söker upp öppna portar, banners och sårbarheter för IP-adresser via Shodan API."
     version = "1.0.0"
@@ -15,13 +23,14 @@ class ShodanPlugin(BaseOSINTPlugin):
     rate_limit_per_minute = 60
     supports_proxy = True
 
-    async def execute(
+    async def _execute(
         self,
-        target: EntityInput,
+        target: str,
+        opsec_client: httpx.AsyncClient,
         api_key: Optional[str] = None,
         proxy_url: Optional[str] = None,
-    ) -> TransformResult:
-        ip_val = target.value.strip()
+    ) -> PluginResult:
+        ip_val = target.strip()
         entities: List[EntityOutput] = []
         relationships: List[RelationOutput] = []
 
@@ -74,10 +83,12 @@ class ShodanPlugin(BaseOSINTPlugin):
                     )
                 )
 
-        return TransformResult(
+        return PluginResult(
             entities=entities,
             relationships=relationships,
             raw_payload=raw_payload,
+            nato_admiralty=self.nato_admiralty,
+            cost_usd=self.cost_per_query_usd,
         )
 
 

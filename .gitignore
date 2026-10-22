@@ -56,3 +56,4 @@ backend/data/exports/*
 Thumbs.db
 .vscode/
 .idea/
+test_results.xml

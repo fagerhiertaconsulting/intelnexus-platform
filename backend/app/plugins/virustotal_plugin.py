@@ -1,9 +1,17 @@
 from typing import List, Optional
-from .base import BaseOSINTPlugin, EntityInput, EntityOutput, RelationOutput, TransformResult
+import httpx
+from .base import BaseOSINTPlugin, EntityOutput, PluginCategory, PluginResult, RelationOutput
 
 
 class VirusTotalPlugin(BaseOSINTPlugin):
+    plugin_id = "virustotal_threat_intel"
     name = "VirusTotal Threat Intelligence"
+    category = PluginCategory.CTI
+    nato_admiralty = "B2"
+    requires_api_key = True
+    cost_per_query_usd = 1.0
+    supported_entity_types: List[str] = ["domain", "ip", "sha256", "Domain", "IPAddress"]
+
     slug = "virustotal_threat_intel"
     description = "Kontrollerar hotpoäng, malware-detekteringar och domänrykte via VirusTotal v3 API."
     version = "1.0.0"
@@ -15,13 +23,14 @@ class VirusTotalPlugin(BaseOSINTPlugin):
     rate_limit_per_minute = 4  # Gratis tier 4/min, enterprise 60+
     supports_proxy = True
 
-    async def execute(
+    async def _execute(
         self,
-        target: EntityInput,
+        target: str,
+        opsec_client: httpx.AsyncClient,
         api_key: Optional[str] = None,
         proxy_url: Optional[str] = None,
-    ) -> TransformResult:
-        val = target.value.strip()
+    ) -> PluginResult:
+        val = target.strip()
         entities: List[EntityOutput] = []
         relationships: List[RelationOutput] = []
 
@@ -48,10 +57,12 @@ class VirusTotalPlugin(BaseOSINTPlugin):
             )
         )
 
-        return TransformResult(
+        return PluginResult(
             entities=entities,
             relationships=relationships,
             raw_payload=raw_payload,
+            nato_admiralty=self.nato_admiralty,
+            cost_usd=self.cost_per_query_usd,
         )
 
 

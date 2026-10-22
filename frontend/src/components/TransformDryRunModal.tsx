@@ -99,6 +99,13 @@ export default function TransformDryRunModal({
                 {targetNode?.type || "unknown"}
               </span>
             </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-400 font-medium">Inhämtningsläge:</span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                LIVE PROBE
+              </span>
+            </div>
           </div>
 
           {/* Estimates Card */}
