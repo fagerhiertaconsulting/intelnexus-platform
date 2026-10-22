@@ -8,7 +8,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![Graph: NetworkX / Neo4j](https://img.shields.io/badge/Graph-NetworkX%20%7C%20Neo4j-orange.svg)]()
 [![BYOAK: AES-256-GCM](https://img.shields.io/badge/Vault-AES--256--GCM-green.svg)]()
-[![Tests: 85 Passed](https://img.shields.io/badge/Tests-85%20Passed-brightgreen.svg)]()
+[![Tests: 89 Passed](https://img.shields.io/badge/Tests-89%20Passed-brightgreen.svg)]()
 [![Coverage: 85.97%](https://img.shields.io/badge/Coverage-85.97%25-brightgreen.svg)]()
 
 **IntelNexus Platform** är en modulär, neutral integrations- och fusionshubb för externa API-leverantörer med stöd för öppen underrättelseinsamling (OSINT), länk- och grafanalys, oföränderlig beviskedjehantering (Chain of Custody), FinOps-kvotkontroll och automatiserad rapportgenerering. Plattformen fungerar som en oberoende orkestreringsmotor som sammanför kommersiella och öppna datakällor under ett enhetligt Plugin-SDK.

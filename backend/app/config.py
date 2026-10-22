@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     TOR_PROXY_URL: str = "socks5://127.0.0.1:9050"
     RESIDENTIAL_PROXY_URL: str = "http://127.0.0.1:8080"
 
+    # Datainsamlingsläge: MOCK_OSINT=false som standard i drift
+    MOCK_OSINT: bool = False
+
     model_config = {
         "env_file": ".env",
         "extra": "ignore",
@@ -46,6 +49,26 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def is_mock_osint() -> bool:
+    """
+    Avgör om mock-läge för OSINT-datainsamling är aktivt.
+    Standard i skarp drift är False (verkliga nätverksanrop).
+    Aktiveras automatiskt vid Pytest-enhetstester eller om MOCK_OSINT=true sätts i miljön.
+    """
+    import os
+    import sys
+
+    val = os.environ.get("MOCK_OSINT", "").lower()
+    if val in ("true", "1", "yes"):
+        return True
+    if val in ("false", "0", "no"):
+        return False
+    if "pytest" in sys.modules or os.environ.get("PYTEST_CURRENT_TEST"):
+        return True
+    return settings.MOCK_OSINT
+
 
 # Säkerställ att datakataloger finns
 settings.DATA_DIR.mkdir(parents=True, exist_ok=True)
