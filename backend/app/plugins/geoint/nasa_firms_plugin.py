@@ -21,7 +21,7 @@ class NASAFIRMSPlugin(BaseOSINTPlugin):
     plugin_id = "geoint_nasa_firms"
     name = "NASA FIRMS Satellite Thermal Anomaly Detector"
     category = PluginCategory.GEOINT
-    nato_admiralty = "A1"
+    nato_admiralty = "A2"
     requires_api_key = False  # Öppna data-feeds tillgängliga utan nyckel, nyckel för VIP API
     cost_per_query_usd = 0.0
     supported_entity_types = [

@@ -8,8 +8,8 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
 [![Graph: NetworkX / Neo4j](https://img.shields.io/badge/Graph-NetworkX%20%7C%20Neo4j-orange.svg)]()
 [![BYOAK: AES-256-GCM](https://img.shields.io/badge/Vault-AES--256--GCM-green.svg)]()
-[![Tests: 106 Passed](https://img.shields.io/badge/Tests-106%20Passed-brightgreen.svg)]()
-[![Coverage: 86.96%](https://img.shields.io/badge/Coverage-86.96%25-brightgreen.svg)]()
+[![Tests: 109 Passed](https://img.shields.io/badge/Tests-109%20Passed-brightgreen.svg)]()
+[![Coverage: 86.98%](https://img.shields.io/badge/Coverage-86.98%25-brightgreen.svg)]()
 
 **IntelNexus Platform** är en modulär, neutral integrations- och fusionshubb för externa API-leverantörer med stöd för öppen underrättelseinsamling (OSINT), länk- och grafanalys, oföränderlig beviskedjehantering (Chain of Custody), FinOps-kvotkontroll och automatiserad rapportgenerering. Plattformen fungerar som en oberoende orkestreringsmotor som sammanför kommersiella och öppna datakällor under ett enhetligt Plugin-SDK.
 
@@ -98,13 +98,13 @@ Startar PostgreSQL (`pgvector`), Neo4j, Redis, MinIO S3 samt Tor SOCKS5-proxy.
 
 ## 🧪 Säkerhetsgranskning & Automatiserad Testsvit
 
-Testsviten omfattar **106 automatiserade tester** med **86.96 % kodtäckning** (över tröskelkravet på $\ge 85.0\%$):
+Testsviten omfattar **109 automatiserade tester** med **86.98 % kodtäckning** (över tröskelkravet på $\ge 85.0\%$):
 * **Fas 1 (Statisk analys & SAST):** `ruff check` (0 fel), `ruff format` (100%), `mypy` (69 källkodsfiler), `bandit` SAST (8 034 rader kod skannade, 0 sårbarheter), `pip-audit` SCA (0 kända CVE:er) samt Next.js ESLint & TypeScript typkontroll.
 * **Fas 2 (Enhetstester & Auth-matris):** Deterministisk normalisering, AES-GCM manipulationstest (`InvalidTag`), och hela autentiseringsmatrisen **AUTH-01 till AUTH-09**.
 * **Fas 3 (DAST & Kritiska sårbarheter):** SSRF-skydd (blockerar loopback, RFC 1918 och molnmetadata `169.254.169.254`), IDOR-isolering och valvsekretess.
 * **Fas 4 (E2E Integration):** Komplett arbetsflöde från ärende och persona till 2FA, valv, grafanalys, GEXF-export och revisionsrapport.
 * **Fas 5 (v3 Plugins, FinOps & OpSec):** Standardiserat Plugin-SDK, Redis Token Bucket rate limiting, responscache, dry-run estimering, Tor egress, PII-sanitisering, flerspråksstöd och NATO Admiralty A1–F6.
-* **Fas 6 (Real OSINT Data Ingestion Engine):** Modulär inhämtningsmotor för SOCMINT (WhatsMyName, Gravatar, PGP), FINMINT (Bolagsverket, OpenCorporates, OpenSanctions, Mempool.space BTC), CTI/NETMINT (crt.sh, Cloudflare DoH, RIPEstat ASN, Shodan CTI) och GEOINT (OpenSky ADS-B, NASA FIRMS). Deterministisk testisolering via `MOCK_OSINT` och automatisk SHA-256 beviskedja.
+* **Fas 6 (Real OSINT Data Ingestion Engine):** Modulär inhämtningsmotor för SOCMINT (WhatsMyName [B2], Gravatar [A1], PGP Keyserver [A1]), FINMINT (Bolagsverket [A1], OpenCorporates [B2], OpenSanctions [A1], Mempool.space BTC [A1]), CTI/NETMINT (crt.sh [A2], Cloudflare DoH [A1], RIPEstat ASN [A1], Shodan CTI [B2]), GEOINT (OpenSky ADS-B [A2], NASA FIRMS [A2], Overpass Infra [B2]) samt DARKINT (HaveIBeenPwned k-anonymitet [A1], Wayback Archive [A1]). Deterministisk testisolering via `MOCK_OSINT` och automatisk SHA-256 beviskedja.
 
 Kör hela verifieringssviten och generera `audit_results.json`:
 

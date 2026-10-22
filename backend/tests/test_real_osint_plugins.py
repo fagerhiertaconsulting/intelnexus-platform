@@ -17,6 +17,9 @@ from app.plugins.finmint.opencorporates_plugin import OpenCorporatesPlugin
 from app.plugins.finmint.opensanctions_plugin import OpenSanctionsPlugin
 from app.plugins.geoint.nasa_firms_plugin import NASAFIRMSPlugin
 from app.plugins.geoint.opensky_adsb_plugin import OpenSkyADSBPlugin
+from app.plugins.geoint.overpass_infra_plugin import OverpassInfraPlugin
+from app.plugins.darkint.hibp_breach_probe import HIBPBreachProbe
+from app.plugins.darkint.wayback_archive_plugin import WaybackArchivePlugin
 from app.plugins.registry import PluginManager, plugin_manager
 from app.plugins.socmint.gravatar_probe import GravatarProbe
 from app.plugins.socmint.pgp_keyserver_probe import PGPKeyserverProbe
@@ -88,6 +91,9 @@ def test_plugin_registry_discovery():
         "cti_shodan",
         "geoint_opensky_adsb",
         "geoint_nasa_firms",
+        "geoint_overpass_infra",
+        "darkint_hibp_breach",
+        "darkint_wayback_archive",
     ]
 
     for ep in expected_plugins:
@@ -285,13 +291,52 @@ async def test_geoint_opensky_adsb_plugin():
 @pytest.mark.asyncio
 async def test_geoint_nasa_firms_plugin():
     plugin = NASAFIRMSPlugin()
-    assert plugin.nato_admiralty == "A1"
+    assert plugin.nato_admiralty == "A2"
     res = await plugin.execute("59.3293, 18.0686")
 
-    assert res.nato_admiralty == "A1"
+    assert res.nato_admiralty == "A2"
     assert any(e.entity_type == "ThermalAnomaly" for e in res.entities)
     assert any(e.entity_type == "Location" for e in res.entities)
     assert any(r.relation_type == "DETECTED_AT" for r in res.relationships)
+
+
+@pytest.mark.asyncio
+async def test_geoint_overpass_infra_plugin():
+    plugin = OverpassInfraPlugin()
+    assert plugin.nato_admiralty == "B2"
+    res = await plugin.execute("59.3293, 18.0686")
+
+    assert res.nato_admiralty == "B2"
+    assert any(e.entity_type == "Infrastructure" for e in res.entities)
+    assert any(r.relation_type == "SPATIAL_INFRASTRUCTURE" for r in res.relationships)
+
+
+@pytest.mark.asyncio
+async def test_darkint_hibp_breach_probe():
+    plugin = HIBPBreachProbe()
+    assert plugin.nato_admiralty == "A1"
+
+    # E-postkontroll
+    res_email = await plugin.execute("victim@example.com")
+    assert res_email.nato_admiralty == "A1"
+    assert any(e.entity_type == "DataBreach" for e in res_email.entities)
+    assert any(r.relation_type == "EXPOSED_IN" for r in res_email.relationships)
+
+    # Lösenords-k-anonymitetskontroll
+    res_pwd = await plugin.execute("P@ssw0rd123!")
+    assert res_pwd.nato_admiralty == "A1"
+    assert any(e.entity_type == "CompromisedCredential" for e in res_pwd.entities)
+
+
+@pytest.mark.asyncio
+async def test_darkint_wayback_archive_plugin():
+    plugin = WaybackArchivePlugin()
+    assert plugin.nato_admiralty == "A1"
+    res = await plugin.execute("https://example.com/target-page")
+
+    assert res.nato_admiralty == "A1"
+    assert any(e.entity_type == "ArchiveSnapshot" for e in res.entities)
+    assert any(r.relation_type == "HISTORICAL_SNAPSHOT" for r in res.relationships)
 
 
 # --- 7. LIVE NETWORK BRANCH COVERAGE VIA MOCK HTTP TRANSPORT ---
@@ -405,6 +450,33 @@ async def test_live_network_branches_via_mock_transport(monkeypatch):
             return httpx.Response(200, text=csv_content)
         elif "github.com" in url_str or "reddit.com" in url_str or "gitlab.com" in url_str:
             return httpx.Response(200, text="valid user profile")
+        elif "overpass-api.de" in url_str:
+            return httpx.Response(
+                200,
+                json={
+                    "elements": [
+                        {"type": "node", "id": 1234, "lat": 59.32, "lon": 18.06, "tags": {"name": "Live Tower"}}
+                    ]
+                },
+            )
+        elif "api.pwnedpasswords.com" in url_str:
+            # 5-char prefix query returnerar suffix:count
+            return httpx.Response(200, text="0018A45C4D1def:5\n1234567890ABCDEF:10\n")
+        elif "haveibeenpwned.com" in url_str:
+            return httpx.Response(
+                200,
+                json=[
+                    {"Name": "LiveBreach", "Title": "Live Breach", "Domain": "breach.com", "BreachDate": "2024-01-01"}
+                ],
+            )
+        elif "web.archive.org/cdx" in url_str:
+            return httpx.Response(
+                200,
+                json=[
+                    ["timestamp", "original", "mimetype", "statuscode", "digest"],
+                    ["20230101120000", "https://example.com", "text/html", "200", "DIGEST123"],
+                ],
+            )
         return httpx.Response(404, text="not found")
 
     mock_client = httpx.AsyncClient(transport=httpx.MockTransport(mock_handler))
@@ -448,5 +520,17 @@ async def test_live_network_branches_via_mock_transport(monkeypatch):
 
     firm_res = await NASAFIRMSPlugin().execute("59.32,18.06", opsec_client=mock_client)
     assert any(e.entity_type == "ThermalAnomaly" for e in firm_res.entities)
+
+    over_res = await OverpassInfraPlugin().execute("59.32,18.06", opsec_client=mock_client)
+    assert any(e.entity_type == "Infrastructure" for e in over_res.entities)
+
+    hibp_email_res = await HIBPBreachProbe().execute("test@example.com", opsec_client=mock_client, api_key="test_hibp")
+    assert any(e.entity_type == "DataBreach" for e in hibp_email_res.entities)
+
+    hibp_pwd_res = await HIBPBreachProbe().execute("Password123", opsec_client=mock_client)
+    assert isinstance(hibp_pwd_res, PluginResult)
+
+    wb_res = await WaybackArchivePlugin().execute("https://example.com", opsec_client=mock_client)
+    assert any(e.entity_type == "ArchiveSnapshot" for e in wb_res.entities)
 
     await mock_client.aclose()

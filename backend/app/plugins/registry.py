@@ -119,6 +119,11 @@ class PluginManager:
         # 5. GEOINT
         from .geoint.nasa_firms_plugin import NASAFIRMSPlugin
         from .geoint.opensky_adsb_plugin import OpenSkyADSBPlugin
+        from .geoint.overpass_infra_plugin import OverpassInfraPlugin
+
+        # 6. DARKINT
+        from .darkint.hibp_breach_probe import HIBPBreachProbe
+        from .darkint.wayback_archive_plugin import WaybackArchivePlugin
 
         builtins: list[Any] = [
             ShodanPlugin,
@@ -137,6 +142,9 @@ class PluginManager:
             ShodanCTIPlugin,
             OpenSkyADSBPlugin,
             NASAFIRMSPlugin,
+            OverpassInfraPlugin,
+            HIBPBreachProbe,
+            WaybackArchivePlugin,
         ]
 
         for cls in builtins:

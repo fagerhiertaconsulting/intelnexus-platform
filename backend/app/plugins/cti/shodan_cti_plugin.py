@@ -1,7 +1,6 @@
 from typing import Any, Dict, List, Optional
 import httpx
 from app.config import is_mock_osint
-from app.core.finops.rate_limiter import rate_limiter
 from app.plugins.base import (
     BaseOSINTPlugin,
     EntityOutput,
@@ -44,6 +43,8 @@ class ShodanCTIPlugin(BaseOSINTPlugin):
         api_key: Optional[str] = None,
         proxy_url: Optional[str] = None,
     ) -> PluginResult:
+        from app.core.finops.rate_limiter import rate_limiter
+
         ip = target.strip()
         entities: List[EntityOutput] = []
         relationships: List[RelationOutput] = []
